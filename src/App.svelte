@@ -89,7 +89,10 @@
                 />m)
             </h1>
             <h2 class="text-2xl text-zinc-700 text-center">
-                Average: {formatSeconds(average)}
+                <span class="font-medium">
+                    Total: {formatSeconds((average / 500) * distance)}</span
+                >
+                <span>({formatSeconds(average)})</span>
             </h2>
             <button
                 on:click={() => {
@@ -144,7 +147,13 @@
         </main>
     </div>
 </div>
-<footer class="text-zinc-900 px-3 py-3 text-lg">Made by: Principle</footer>
+<footer class="text-zinc-900 px-3 py-3 text-lg">
+    <span>Made by:</span>
+    <a
+        class="text-indigo-400 hover:text-indigo-500 transition-color"
+        href="https://github.com/principle105">principle105</a
+    >
+</footer>
 
 <style global>
     @tailwind utilities;
