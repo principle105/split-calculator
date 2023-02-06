@@ -38,7 +38,6 @@
     };
 
     const getAverage = () => {
-        console.log("yes");
         let total = 0;
         let totalDistance = 0;
 
