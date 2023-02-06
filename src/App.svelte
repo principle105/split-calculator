@@ -38,13 +38,26 @@
     };
 
     const getAverage = () => {
+        console.log("yes");
         let total = 0;
+        let totalDistance = 0;
 
-        values.forEach((v) => {
+        values.forEach((v, i) => {
             // Ensures that average only updates by increment
-            const size = getDistance(v.size) / distance;
+            let size = getDistance(v.size) / distance;
+
+            totalDistance += size * distance;
 
             total += (v.minutes * 60 + v.seconds) * size;
+
+            if (i === values.length - 1) {
+                let difference = (distance - totalDistance) / distance;
+
+                size += difference;
+                total += (v.minutes * 60 + v.seconds) * difference;
+            }
+
+            v.size = size * 100;
         });
 
         return total;
