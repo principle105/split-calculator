@@ -8,8 +8,6 @@
         rawInput: string;
     }
 
-    let distance: number = 2000;
-
     const defaultInterval = {
         size: 100,
         minutes: 2,
@@ -17,9 +15,12 @@
         rawInput: "2:00",
     };
 
+    let distance: number = 2000;
     let values: Section[] = [defaultInterval];
 
-    $: panesNumber = values.length;
+    $: minInc = Math.pow(10, Math.floor(Math.log10(distance))) / 100;
+
+    $: minInc, console.log(minInc);
 
     const handleResize = (event) => {
         values.forEach((value, i) => {
@@ -27,7 +28,7 @@
         });
     };
 
-    const formatSeconds = (totalSeconds) => {
+    const formatSeconds = (totalSeconds: number) => {
         const seconds = Math.round(totalSeconds);
         const miliseconds = (totalSeconds - seconds) * 1000;
 
@@ -96,7 +97,7 @@
             </h2>
             <button
                 on:click={() => {
-                    if (panesNumber >= 0) values = [...values, defaultInterval];
+                    values = [...values, defaultInterval];
                 }}
                 class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2"
             >
@@ -113,9 +114,11 @@
                 {/if}
                 <Splitpanes on:resize={handleResize} on:resized={handleResize}>
                     {#each values as v, i}
-                        <Pane minSize={5} class="px-2 py-3">
-                            <h4 class="text-sm mb-0.5">
-                                {Math.round((v.size / 1000) * distance) * 10}m
+                        <Pane minSize={5} class="px-2 py-3 flex flex-col gap-1">
+                            <h4 class="text-sm">
+                                {Math.round(
+                                    (v.size / (100 * minInc)) * distance
+                                ) * minInc}m
                             </h4>
 
                             <input
@@ -124,29 +127,26 @@
                                 on:input={(e) => handleInput(e, i)}
                                 on:blur={() => handleBlur(i)}
                                 maxlength="4"
-                                class="outline-none w-full max-w-[3.25rem] py-2 text-center rounded-md mb-2"
+                                class="outline-none w-full max-w-[3.25rem] py-2 text-center rounded-md"
                             />
-                            <div>
-                                <button
-                                    on:click={() => {
-                                        if (panesNumber > 0) {
-                                            values.splice(i, 1);
-                                            values = values;
-                                        }
-                                    }}
-                                    class="text-zinc-800 font-medium rounded-lg text-sm p-2 text-center inline-flex items-center"
+                            <button
+                                on:click={() => {
+                                    values.splice(i, 1);
+                                    values = values;
+                                }}
+                                class="text-zinc-800 font-medium rounded-lg text-sm p-2 text-center inline-flex items-center"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 448 512"
+                                    class="w-5 h-5"
+                                    fill="currentColor"
                                 >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 448 512"
-                                        class="w-5 h-5"
-                                        fill="currentColor"
-                                        ><path
-                                            d="M32 464a48 48 0 0 0 48 48h288a48 48 0 0 0 48-48V128H32zm272-256a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zM432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16z"
-                                        /></svg
-                                    >
-                                </button>
-                            </div>
+                                    <path
+                                        d="M32 464a48 48 0 0 0 48 48h288a48 48 0 0 0 48-48V128H32zm272-256a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zM432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16z"
+                                    />
+                                </svg>
+                            </button>
                         </Pane>
                     {/each}
                 </Splitpanes>
