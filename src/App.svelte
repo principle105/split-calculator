@@ -133,7 +133,7 @@
                     {#each values as v, i}
                         <Pane minSize={5} class="px-2 py-3 flex flex-col gap-1">
                             <h4 class="text-sm">
-                                {getDistance(v.size)}m
+                                {distance ? getDistance(v.size) : null}m
                             </h4>
 
                             <input
