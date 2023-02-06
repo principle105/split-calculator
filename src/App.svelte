@@ -157,7 +157,7 @@
 <footer class="text-zinc-900 px-3 py-3 text-lg">
     <span>Made by:</span>
     <a
-        class="text-indigo-500 hover:text-indigo-600 transition-color"
+        class="text-indigo-500 hover:text-indigo-600 transition-color font-medium"
         href="https://github.com/principle105"
         target="_blank"
         rel="noreferrer"
