@@ -20,8 +20,6 @@
 
     $: minInc = Math.pow(10, Math.floor(Math.log10(distance))) / 100;
 
-    $: minInc, console.log(minInc);
-
     const handleResize = (event) => {
         values.forEach((value, i) => {
             values[i] = { ...value, size: event.detail[i].size };
@@ -42,9 +40,12 @@
     const getAverage = () => {
         let total = 0;
 
-        values.forEach(
-            (v) => (total += ((v.minutes * 60 + v.seconds) * v.size) / 100)
-        );
+        values.forEach((v) => {
+            // Ensures that average only updates by increment
+            const size = getDistance(v.size) / distance;
+
+            total += (v.minutes * 60 + v.seconds) * size;
+        });
 
         return total;
     };
@@ -61,6 +62,10 @@
         let seconds = parseInt(parts[1]);
 
         return [seconds, minutes];
+    };
+
+    const getDistance = (size: number) => {
+        return Math.round((size / (100 * minInc)) * distance) * minInc;
     };
 
     const handleInput = (event, i: number) => {
@@ -116,9 +121,7 @@
                     {#each values as v, i}
                         <Pane minSize={5} class="px-2 py-3 flex flex-col gap-1">
                             <h4 class="text-sm">
-                                {Math.round(
-                                    (v.size / (100 * minInc)) * distance
-                                ) * minInc}m
+                                {getDistance(v.size)}m
                             </h4>
 
                             <input
