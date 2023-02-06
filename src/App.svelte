@@ -90,7 +90,7 @@
             </h1>
             <h2 class="text-2xl text-zinc-700 text-center">
                 <span class="font-medium">
-                    Total: {formatSeconds((average / 500) * distance)}</span
+                    {formatSeconds((average / 500) * distance)}</span
                 >
                 <span>({formatSeconds(average)})</span>
             </h2>
@@ -104,6 +104,13 @@
             </button>
 
             <div class="overflow-hidden rounded-md">
+                {#if values.length == 0}
+                    <p
+                        class="py-[3.25rem] text-center bg-zinc-100 text-zinc-800 font-medium"
+                    >
+                        You don't have any sections
+                    </p>
+                {/if}
                 <Splitpanes on:resize={handleResize} on:resized={handleResize}>
                     {#each values as v, i}
                         <Pane minSize={5} class="px-2 py-3">
@@ -127,17 +134,17 @@
                                             values = values;
                                         }
                                     }}
-                                    class="text-white bg-red-600 hover:bg-red-700 font-medium rounded-lg text-sm p-2 text-center inline-flex items-center"
+                                    class="text-zinc-800 font-medium rounded-lg text-sm p-2 text-center inline-flex items-center"
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 352 512"
+                                        viewBox="0 0 448 512"
                                         class="w-5 h-5"
                                         fill="currentColor"
                                         ><path
-                                            d="M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"
-                                        />
-                                    </svg>
+                                            d="M32 464a48 48 0 0 0 48 48h288a48 48 0 0 0 48-48V128H32zm272-256a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zM432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16z"
+                                        /></svg
+                                    >
                                 </button>
                             </div>
                         </Pane>
@@ -150,9 +157,13 @@
 <footer class="text-zinc-900 px-3 py-3 text-lg">
     <span>Made by:</span>
     <a
-        class="text-indigo-400 hover:text-indigo-500 transition-color"
-        href="https://github.com/principle105">principle105</a
+        class="text-indigo-500 hover:text-indigo-600 transition-color"
+        href="https://github.com/principle105"
+        target="_blank"
+        rel="noreferrer"
     >
+        principle105
+    </a>
 </footer>
 
 <style global>
