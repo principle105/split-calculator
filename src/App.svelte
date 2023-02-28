@@ -27,14 +27,13 @@
     };
 
     const formatSeconds = (totalSeconds: number) => {
-        const seconds = Math.round(totalSeconds);
-        const miliseconds = (totalSeconds - seconds) * 1000;
+        const date = new Date(totalSeconds * 1000).toISOString();
 
-        let date = new Date(0);
-        date.setSeconds(seconds);
-        date.setMilliseconds(miliseconds);
+        if (totalSeconds < 3600) {
+            return date.substring(14, 19).replace(/^0+/, "");
+        }
 
-        return date.toISOString().substring(15, 21);
+        return date.substring(11, 19).replace(/^0+/, "");
     };
 
     const getAverage = () => {
