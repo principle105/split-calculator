@@ -30,14 +30,14 @@
         const date = new Date(totalSeconds * 1000).toISOString();
 
         if (totalSeconds < 1) {
-            return "0:00";
+            return "0:00.0";
         }
 
         if (totalSeconds < 3600) {
-            return date.substring(14, 19).replace(/^0+(?!:)/, "");
+            return date.substring(14, 21).replace(/^0+(?!:)/, "");
         }
 
-        return date.substring(11, 19).replace(/^0+/, "");
+        return date.substring(11, 21).replace(/^0+/, "");
     };
 
     const getAverage = () => {
@@ -136,7 +136,7 @@
                     {#each values as v, i}
                         <Pane minSize={5} class="px-2 py-3 flex flex-col gap-1">
                             <h4 class="text-sm">
-                                {distance ? getDistance(v.size) : null}m
+                                {distance ? getDistance(v.size) : 0}m
                             </h4>
 
                             <input
