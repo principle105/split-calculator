@@ -29,8 +29,12 @@
     const formatSeconds = (totalSeconds: number) => {
         const date = new Date(totalSeconds * 1000).toISOString();
 
+        if (totalSeconds < 1) {
+            return "0:00";
+        }
+
         if (totalSeconds < 3600) {
-            return date.substring(14, 19).replace(/^0+/, "");
+            return date.substring(14, 19).replace(/^0+(?!:)/, "");
         }
 
         return date.substring(11, 19).replace(/^0+/, "");
