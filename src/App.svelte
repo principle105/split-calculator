@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { Pane, Splitpanes } from "svelte-splitpanes";
+    import toast, { Toaster } from "svelte-french-toast";
 
     interface Interval {
         size: number;
@@ -9,19 +10,33 @@
         rawInput: string;
     }
 
+    const SMALLEST_SIZE = 5;
+    const MAX_INTERVALS = 8;
+
     const DEFAULT_INTERVAL: Interval = {
-        size: 100,
+        size: SMALLEST_SIZE,
         minutes: 2,
         seconds: 0,
         rawInput: "2:00",
     };
 
     let distance: number = 2000;
+    let distanceRawInput: string = distance.toString();
+
     let intervals: Interval[] = [DEFAULT_INTERVAL];
 
-    $: minInc = Math.pow(10, Math.floor(Math.log10(distance))) / 100;
-
+    let loaded: boolean = false;
     let isDarkMode: boolean = false;
+
+    $: intervals,
+        loaded
+            ? localStorage.setItem("intervals", JSON.stringify(intervals))
+            : null,
+        loaded ? console.log("hi", intervals) : null;
+    $: distance,
+        loaded ? localStorage.setItem("distance", distance.toString()) : null;
+
+    $: minInc = Math.pow(10, Math.floor(Math.log10(distance))) / 100;
 
     const toggleMode = () => {
         isDarkMode = !isDarkMode;
@@ -34,6 +49,18 @@
             localStorage.getItem("color-theme") === "dark" ||
             (!("color-theme" in localStorage) &&
                 window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+        intervals = localStorage.getItem("intervals")
+            ? JSON.parse(localStorage.getItem("intervals"))
+            : [DEFAULT_INTERVAL];
+
+        console.log("loaded", intervals);
+
+        distance = localStorage.getItem("distance")
+            ? parseInt(localStorage.getItem("distance"))
+            : 2000;
+
+        loaded = true;
     });
 
     $: isDarkMode, updateTheme();
@@ -110,7 +137,7 @@
         return Math.round((size / (100 * minInc)) * distance) * minInc;
     };
 
-    const handleInput = (event, index: number) => {
+    const handleSplitInput = (event, index: number) => {
         let enteredTime = event.target.value;
 
         const [seconds, minutes] = parseTime(enteredTime);
@@ -126,11 +153,47 @@
         intervals = intervals;
     };
 
-    const handleBlur = (index: number) => {
+    const handleSplitBlur = (index: number) => {
         intervals[index].rawInput = formatSplit(intervals[index]);
+    };
+
+    const handleDistanceInput = (event) => {
+        let enteredDistance = event.target.value;
+
+        console.log("entered", enteredDistance);
+
+        // Check if enteredDistance is an integer and is greater than 0
+
+        if (enteredDistance.match(/^\d+$/) && parseInt(enteredDistance) > 0) {
+            distance = parseInt(enteredDistance);
+        }
+    };
+
+    const handleDistanceBlur = () => {
+        distanceRawInput = distance.toString();
+    };
+
+    const addSection = () => {
+        if (intervals.length >= MAX_INTERVALS) {
+            toast.error("You can only have 8 sections");
+            return;
+        }
+
+        intervals
+            .slice()
+            .reverse()
+            .forEach((interval, i) => {
+                if (interval.size > SMALLEST_SIZE) {
+                    intervals[intervals.length - i - 1].size -= SMALLEST_SIZE;
+                    return;
+                }
+            });
+
+        intervals = [...intervals, DEFAULT_INTERVAL];
     };
 </script>
 
+<Toaster />
 <header class="absolute right-8 top-8">
     <button on:click={toggleMode}>
         {#if isDarkMode}
@@ -163,8 +226,10 @@
         class="text-5xl text-zinc-800 text-center font-bold mb-2 dark:text-white"
     >
         Split Calculator (<input
-            bind:value={distance}
-            style="width: {distance.toString().length}ch"
+            bind:value={distanceRawInput}
+            on:input={handleDistanceInput}
+            on:blur={handleDistanceBlur}
+            style="width: {distanceRawInput.toString().length}ch"
             class="bg-transparent outline-none w-7"
         />m)
     </h1>
@@ -175,9 +240,7 @@
         <span>({formatSeconds(average)})</span>
     </h2>
     <button
-        on:click={() => {
-            intervals = [...intervals, DEFAULT_INTERVAL];
-        }}
+        on:click={addSection}
         class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-indigo-500 dark:hover:bg-indigo-700"
     >
         Add Section
@@ -185,57 +248,66 @@
     <div class="overflow-hidden rounded-md">
         {#if intervals.length == 0}
             <p
-                class="py-[3.25rem] text-center bg-zinc-100 text-zinc-800 font-medium"
+                class="py-[3.25rem] text-center bg-zinc-100 text-zinc-800 font-medium dark:!bg-zinc-700 dark:!text-white"
             >
                 You don't have any sections
             </p>
         {/if}
-        <Splitpanes on:resize={handleResize} on:resized={handleResize}>
-            {#each intervals as interval, i}
-                <Pane
-                    minSize={5}
-                    class="px-2 py-3 flex flex-col gap-1 dark:!bg-zinc-700"
-                >
-                    <h4 class="text-sm dark:text-white">
-                        {distance ? getDistance(interval.size) : 0}m
-                    </h4>
+        {#if loaded}
+            <Splitpanes on:resize={handleResize} on:resized={handleResize}>
+                {#each intervals as interval, i}
+                    <Pane
+                        minSize={SMALLEST_SIZE}
+                        size={interval.size}
+                        class="px-2 py-3 flex flex-col gap-1 dark:!bg-zinc-700"
+                    >
+                        <h4 class="text-sm dark:text-white">
+                            {distance ? getDistance(interval.size) : 0}m
+                        </h4>
 
-                    <input
-                        type="text"
-                        bind:value={interval.rawInput}
-                        on:input={(e) => handleInput(e, i)}
-                        on:blur={() => handleBlur(i)}
-                        maxlength="4"
-                        class="outline-none w-full max-w-[3.25rem] py-2 text-center rounded-md dark:bg-zinc-600 dark:text-white my-1"
-                    />
-                    <div>
-                        <button
-                            on:click={() => {
-                                removeInterval(i);
+                        <input
+                            type="text"
+                            bind:value={interval.rawInput}
+                            on:input={(e) => handleSplitInput(e, i)}
+                            on:blur={() => handleSplitBlur(i)}
+                            on:keypress={(e) => {
+                                if (e.key === "Enter") {
+                                    // @ts-ignore
+                                    e.target.blur();
+                                }
                             }}
-                            class="text-zinc-800 font-medium rounded-lg text-sm p-1 text-center inline-flex items-center dark:text-zinc-200"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 448 512"
-                                class="w-5 h-5"
-                                fill="currentColor"
+                            maxlength="4"
+                            class="outline-none w-full max-w-[3.25rem] py-2 text-center rounded-md dark:bg-zinc-600 dark:text-white my-1"
+                        />
+                        <div>
+                            <button
+                                on:click={() => {
+                                    removeInterval(i);
+                                }}
+                                class="text-zinc-800 font-medium rounded-lg text-sm p-1 text-center inline-flex items-center dark:text-zinc-200"
                             >
-                                <path
-                                    d="M32 464a48 48 0 0 0 48 48h288a48 48 0 0 0 48-48V128H32zm272-256a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zM432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16z"
-                                />
-                            </svg>
-                        </button>
-                    </div>
-                </Pane>
-            {/each}
-        </Splitpanes>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 448 512"
+                                    class="w-5 h-5"
+                                    fill="currentColor"
+                                >
+                                    <path
+                                        d="M32 464a48 48 0 0 0 48 48h288a48 48 0 0 0 48-48V128H32zm272-256a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zM432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16z"
+                                    />
+                                </svg>
+                            </button>
+                        </div>
+                    </Pane>
+                {/each}
+            </Splitpanes>
+        {/if}
     </div>
 </main>
 <footer class="text-zinc-800 px-3 py-3 text-lg dark:text-white">
     <span>Made by:</span>
     <a
-        class="text-indigo-500 hover:text-indigo-600 transition-color font-medium"
+        class="text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-500 transition-color font-medium"
         href="https://github.com/principle105"
         target="_blank"
         rel="noreferrer"
