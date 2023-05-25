@@ -12,9 +12,8 @@
 
     const SMALLEST_SIZE = 5;
     const MAX_INTERVALS = 8;
-
     const DEFAULT_INTERVAL: Interval = {
-        size: SMALLEST_SIZE,
+        size: 100,
         minutes: 2,
         seconds: 0,
         rawInput: "2:00",
@@ -31,18 +30,13 @@
     $: intervals,
         loaded
             ? localStorage.setItem("intervals", JSON.stringify(intervals))
-            : null,
-        loaded ? console.log("hi", intervals) : null;
+            : null;
     $: distance,
         loaded ? localStorage.setItem("distance", distance.toString()) : null;
 
     $: minInc = Math.pow(10, Math.floor(Math.log10(distance))) / 100;
-
-    const toggleMode = () => {
-        isDarkMode = !isDarkMode;
-
-        localStorage.setItem("color-theme", isDarkMode ? "dark" : "light");
-    };
+    $: average = intervals ? calculateAverageTime() : 0;
+    $: isDarkMode, updateTheme();
 
     onMount(() => {
         isDarkMode =
@@ -54,8 +48,6 @@
             ? JSON.parse(localStorage.getItem("intervals"))
             : [DEFAULT_INTERVAL];
 
-        console.log("loaded", intervals);
-
         distance = localStorage.getItem("distance")
             ? parseInt(localStorage.getItem("distance"))
             : 2000;
@@ -63,7 +55,11 @@
         loaded = true;
     });
 
-    $: isDarkMode, updateTheme();
+    const toggleMode = () => {
+        isDarkMode = !isDarkMode;
+
+        localStorage.setItem("color-theme", isDarkMode ? "dark" : "light");
+    };
 
     const updateTheme = () => {
         if (isDarkMode) {
@@ -71,13 +67,6 @@
         } else {
             document.documentElement.classList.remove("dark");
         }
-    };
-
-    const handleResize = (event) => {
-        intervals = intervals.map((interval, i) => ({
-            ...interval,
-            size: event.detail[i].size,
-        }));
     };
 
     const formatSeconds = (totalSeconds: number): string => {
@@ -119,8 +108,6 @@
         return total;
     };
 
-    $: average = intervals ? calculateAverageTime() : 0;
-
     const formatSplit = (v: Interval) => {
         return `${v.minutes}:${v.seconds.toString().padStart(2, "0")}`;
     };
@@ -137,6 +124,11 @@
         return Math.round((size / (100 * minInc)) * distance) * minInc;
     };
 
+    const removeInterval = (index: number) => {
+        intervals.splice(index, 1);
+        intervals = intervals;
+    };
+
     const handleSplitInput = (event, index: number) => {
         let enteredTime = event.target.value;
 
@@ -148,48 +140,44 @@
         }
     };
 
-    const removeInterval = (index: number) => {
-        intervals.splice(index, 1);
-        intervals = intervals;
-    };
-
-    const handleSplitBlur = (index: number) => {
-        intervals[index].rawInput = formatSplit(intervals[index]);
-    };
-
     const handleDistanceInput = (event) => {
         let enteredDistance = event.target.value;
-
-        console.log("entered", enteredDistance);
-
-        // Check if enteredDistance is an integer and is greater than 0
 
         if (enteredDistance.match(/^\d+$/) && parseInt(enteredDistance) > 0) {
             distance = parseInt(enteredDistance);
         }
     };
 
+    const handleSplitBlur = (index: number) => {
+        intervals[index].rawInput = formatSplit(intervals[index]);
+    };
+
     const handleDistanceBlur = () => {
         distanceRawInput = distance.toString();
     };
 
+    const handleResize = (event) => {
+        intervals = intervals.map((interval, i) => ({
+            ...interval,
+            size: event.detail[i].size,
+        }));
+    };
+
     const addSection = () => {
         if (intervals.length >= MAX_INTERVALS) {
-            toast.error("You can only have 8 sections");
+            toast.error(`You can have a maximum of ${MAX_INTERVALS} sections`);
             return;
         }
 
-        intervals
-            .slice()
-            .reverse()
-            .forEach((interval, i) => {
-                if (interval.size > SMALLEST_SIZE) {
-                    intervals[intervals.length - i - 1].size -= SMALLEST_SIZE;
-                    return;
-                }
-            });
+        for (let i = intervals.length - 1; i >= 0; i--) {
+            if (intervals[i].size > SMALLEST_SIZE) {
+                intervals[i].size -= SMALLEST_SIZE;
+                break;
+            }
+        }
 
-        intervals = [...intervals, DEFAULT_INTERVAL];
+        const newInterval = { ...DEFAULT_INTERVAL, size: SMALLEST_SIZE };
+        intervals = [...intervals, newInterval];
     };
 </script>
 
