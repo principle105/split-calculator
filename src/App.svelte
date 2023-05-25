@@ -173,7 +173,6 @@
             toast.error("Distance must be a number");
         } else if (distanceRawInputNumber < MIN_DISTANCE) {
             toast.error(`Distance must be greater than ${MIN_DISTANCE} metres`);
-            distanceRawInput = distance.toString();
         } else if (parseInt(distanceRawInput) > MAX_DISTANCE) {
             toast.error(
                 `Distance must be less than ${MAX_DISTANCE.toLocaleString()} metres`
