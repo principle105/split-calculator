@@ -1,7 +1,7 @@
 <script lang="ts">
     export let showing: boolean;
     export let message: string;
-    export let topPositioning: string = "-top-full";
+    export let positioning: string = "-top-full";
     export let top: boolean = true;
 
     // TODO: Add automatic top positioning based on the number of lines
@@ -10,7 +10,7 @@
 <div class="relative inline-block z-50">
     <slot />
     <div
-        class="absolute {topPositioning} text-sm text-white {showing
+        class="absolute {positioning} text-sm text-white {showing
             ? 'opacity-100'
             : 'opacity-0'} transition-opacity duration-150 ease"
     >

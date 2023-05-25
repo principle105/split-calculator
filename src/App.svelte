@@ -211,7 +211,7 @@
     };
 </script>
 
-<Toaster />
+<Toaster toastOptions={{ className: "toast" }} />
 <header class="absolute right-8 top-8">
     <button on:click={toggleMode}>
         {#if isDarkMode}
@@ -247,7 +247,7 @@
             showing={showTooltipIndicators}
             message="Click to edit the distance"
             ><span
-                class="dark:bg-zinc-700 bg-zinc-200 bg-opacity-[0.35] dark:bg-opacity-40 rounded-lg p-1"
+                class="dark:bg-zinc-700 bg-zinc-200 !bg-opacity-[0.35] rounded-lg p-1"
                 >(<input
                     bind:value={distanceRawInput}
                     on:input={handleDistanceInput}
@@ -270,7 +270,7 @@
             showing={showTooltipIndicators}
             message="Total time and average split"
             top={false}
-            topPositioning="bottom-[calc(-100%-1.85rem)]"
+            positioning="bottom-[calc(-100%-1.85rem)]"
         >
             <span class="font-medium">
                 {formatSeconds((average / 500) * distance)}</span
@@ -281,7 +281,7 @@
 
     <Tooltip
         showing={showTooltipIndicators}
-        topPositioning="top-[calc(-100%-1.5rem)]"
+        positioning="top-[calc(-100%-1.5rem)]"
         message="Click to add a new section"
     >
         <button
@@ -307,7 +307,7 @@
                     <Pane
                         minSize={SMALLEST_SIZE}
                         size={interval.size}
-                        class="px-2 py-3 flex flex-col gap-1 dark:!bg-zinc-700"
+                        class="px-2 py-3 flex flex-col gap-1 dark:!bg-zinc-700 dark:!bg-opacity-90"
                     >
                         <h4 class="text-sm dark:text-white">
                             {distance ? getDistance(interval.size) : 0}m
@@ -384,5 +384,9 @@
 <style global lang="postcss">
     :global(.dark .splitpanes__splitter) {
         @apply !bg-zinc-500 !border-zinc-400;
+    }
+
+    :global(.dark .toast) {
+        @apply !bg-zinc-700 !text-white;
     }
 </style>
