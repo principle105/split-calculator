@@ -2,6 +2,7 @@
     import { onMount } from "svelte";
     import { Pane, Splitpanes } from "svelte-splitpanes";
     import toast, { Toaster } from "svelte-french-toast";
+    import Tooltip from "./components/Tooltip.svelte";
 
     interface Interval {
         size: number;
@@ -26,6 +27,7 @@
 
     let loaded: boolean = false;
     let isDarkMode: boolean = false;
+    let showTooltipIndicators: boolean = false;
 
     $: intervals,
         loaded
@@ -181,7 +183,6 @@
     };
 </script>
 
-<Toaster />
 <header class="absolute right-8 top-8">
     <button on:click={toggleMode}>
         {#if isDarkMode}
@@ -213,26 +214,47 @@
     <h1
         class="text-5xl text-zinc-800 text-center font-bold mb-2 dark:text-white"
     >
-        Split Calculator (<input
-            bind:value={distanceRawInput}
-            on:input={handleDistanceInput}
-            on:blur={handleDistanceBlur}
-            style="width: {distanceRawInput.toString().length}ch"
-            class="bg-transparent outline-none w-7"
-        />m)
-    </h1>
-    <h2 class="text-2xl text-zinc-700 text-center dark:text-zinc-400">
-        <span class="font-medium">
-            {formatSeconds((average / 500) * distance)}</span
+        Split Calculator (<Tooltip
+            showing={showTooltipIndicators}
+            message="Click to edit the distance"
         >
-        <span>({formatSeconds(average)})</span>
+            <input
+                bind:value={distanceRawInput}
+                on:input={handleDistanceInput}
+                on:blur={handleDistanceBlur}
+                style="width: {distanceRawInput.toString().length}ch"
+                class="bg-transparent outline-none w-7"
+            />
+        </Tooltip>m)
+    </h1>
+
+    <h2 class="text-2xl text-zinc-700 text-center dark:text-zinc-400">
+        <Tooltip
+            showing={showTooltipIndicators}
+            message="Total time and average split"
+            top={false}
+            topPositioning="bottom-[calc(-100%-1.85rem)]"
+        >
+            <span class="font-medium">
+                {formatSeconds((average / 500) * distance)}</span
+            >
+            <span>({formatSeconds(average)})</span>
+        </Tooltip>
     </h2>
-    <button
-        on:click={addSection}
-        class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-indigo-500 dark:hover:bg-indigo-700"
+
+    <Tooltip
+        showing={showTooltipIndicators}
+        topPositioning="top-[calc(-100%-1.5rem)]"
+        message="Click to add a new section"
     >
-        Add Section
-    </button>
+        <button
+            on:click={addSection}
+            class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-lg text-xs px-5 py-2.5 mr-2 mb-2 dark:bg-indigo-500 dark:hover:bg-indigo-700"
+        >
+            Add Section
+        </button>
+    </Tooltip>
+
     <div class="overflow-hidden rounded-md">
         {#if intervals.length == 0}
             <p
@@ -292,16 +314,33 @@
         {/if}
     </div>
 </main>
-<footer class="text-zinc-800 px-3 py-3 text-lg dark:text-white">
-    <span>Made by:</span>
-    <a
-        class="text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-500 transition-color font-medium"
-        href="https://github.com/principle105"
-        target="_blank"
-        rel="noreferrer"
-    >
-        principle105
-    </a>
+<footer
+    class="text-zinc-800 px-3 py-3 text-lg dark:text-white flex items-center justify-between"
+>
+    <div>
+        <span>Made by:</span>
+        <a
+            class="text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-500 transition-color font-medium"
+            href="https://github.com/principle105"
+            target="_blank"
+            rel="noreferrer"
+        >
+            principle105
+        </a>
+    </div>
+
+    <button on:click={() => (showTooltipIndicators = !showTooltipIndicators)}>
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            class="w-8 h-8"
+            fill="currentColor"
+        >
+            <path
+                d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z"
+            />
+        </svg>
+    </button>
 </footer>
 
 <style global>
