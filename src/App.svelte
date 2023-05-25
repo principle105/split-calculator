@@ -13,6 +13,7 @@
 
     const SMALLEST_SIZE = 5;
     const MAX_INTERVALS = 8;
+    const MAX_DISTANCE = 100000;
     const DEFAULT_INTERVAL: Interval = {
         size: 100,
         minutes: 2,
@@ -123,7 +124,9 @@
     };
 
     const getDistance = (size: number) => {
-        return Math.round((size / (100 * minInc)) * distance) * minInc;
+        return Math.round(
+            Math.round((size / (100 * minInc)) * distance) * minInc
+        );
     };
 
     const removeInterval = (index: number) => {
@@ -142,19 +145,40 @@
         }
     };
 
-    const handleDistanceInput = (event) => {
-        let enteredDistance = event.target.value;
-
-        if (enteredDistance.match(/^\d+$/) && parseInt(enteredDistance) > 0) {
-            distance = parseInt(enteredDistance);
-        }
-    };
-
     const handleSplitBlur = (index: number) => {
+        const [seconds, minutes] = parseTime(intervals[index].rawInput);
+
+        if (!(minutes >= 0 && minutes < 10 && seconds >= 0 && seconds < 60)) {
+            toast.error("Split must be a valid time");
+        }
+
         intervals[index].rawInput = formatSplit(intervals[index]);
     };
 
+    const handleDistanceInput = (event) => {
+        let enteredDistance = event.target.value;
+
+        if (!enteredDistance.match(/^\d+$/)) return;
+        if (parseInt(enteredDistance) <= 0) return;
+        if (enteredDistance > MAX_DISTANCE) return;
+
+        distance = parseInt(enteredDistance);
+    };
+
     const handleDistanceBlur = () => {
+        const distanceRawInputNumber = parseInt(distanceRawInput);
+
+        if (!distanceRawInput.match(/^\d+$/)) {
+            toast.error("Distance must be a number");
+        } else if (distanceRawInputNumber <= 0) {
+            toast.error("Distance must be greater than 0 metres");
+            distanceRawInput = distance.toString();
+        } else if (parseInt(distanceRawInput) > MAX_DISTANCE) {
+            toast.error(
+                `The distance must be less than ${MAX_DISTANCE.toLocaleString()} metres`
+            );
+        }
+
         distanceRawInput = distance.toString();
     };
 
@@ -183,6 +207,7 @@
     };
 </script>
 
+<Toaster />
 <header class="absolute right-8 top-8">
     <button on:click={toggleMode}>
         {#if isDarkMode}
@@ -214,18 +239,27 @@
     <h1
         class="text-5xl text-zinc-800 text-center font-bold mb-2 dark:text-white"
     >
-        Split Calculator (<Tooltip
-            showing={showTooltipIndicators}
-            message="Click to edit the distance"
+        Split Calculator <span
+            class="dark:bg-zinc-700 bg-zinc-200 bg-opacity-[0.35] dark:bg-opacity-40 rounded-lg p-1"
+            >(<Tooltip
+                showing={showTooltipIndicators}
+                message="Click to edit the distance"
+            >
+                <input
+                    bind:value={distanceRawInput}
+                    on:input={handleDistanceInput}
+                    on:blur={handleDistanceBlur}
+                    on:keypress={(e) => {
+                        if (e.key === "Enter") {
+                            // @ts-ignore
+                            e.target.blur();
+                        }
+                    }}
+                    style="width: {distanceRawInput.toString().length}ch"
+                    class="bg-transparent outline-none w-7"
+                />
+            </Tooltip>m)</span
         >
-            <input
-                bind:value={distanceRawInput}
-                on:input={handleDistanceInput}
-                on:blur={handleDistanceBlur}
-                style="width: {distanceRawInput.toString().length}ch"
-                class="bg-transparent outline-none w-7"
-            />
-        </Tooltip>m)
     </h1>
 
     <h2 class="text-2xl text-zinc-700 text-center dark:text-zinc-400">
@@ -255,10 +289,11 @@
         </button>
     </Tooltip>
 
+    <!-- Split pane -->
     <div class="overflow-hidden rounded-md">
         {#if intervals.length == 0}
             <p
-                class="py-[3.25rem] text-center bg-zinc-100 text-zinc-800 font-medium dark:!bg-zinc-700 dark:!text-white"
+                class="py-[3.3rem] text-center bg-zinc-100 text-zinc-800 font-medium dark:!bg-zinc-700 dark:!text-white"
             >
                 You don't have any sections
             </p>
@@ -343,8 +378,8 @@
     </button>
 </footer>
 
-<style global>
-    @tailwind utilities;
-    @tailwind components;
-    @tailwind base;
+<style global lang="postcss">
+    :global(.dark .splitpanes__splitter) {
+        @apply !bg-zinc-500 !border-zinc-400;
+    }
 </style>
