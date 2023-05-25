@@ -31,30 +31,28 @@
     let isDarkMode: boolean = false;
     let showTooltipIndicators: boolean = false;
 
-    $: intervals,
-        loaded
-            ? localStorage.setItem("intervals", JSON.stringify(intervals))
-            : null;
-    $: distance,
-        loaded ? localStorage.setItem("distance", distance.toString()) : null;
+    $: intervals, localStorage.setItem("intervals", JSON.stringify(intervals));
+    $: distance, localStorage.setItem("distance", distance.toString());
 
     $: minInc = Math.pow(10, Math.floor(Math.log10(distance))) / 100;
     $: average = intervals ? calculateAverageTime() : 0;
     $: isDarkMode, updateTheme();
 
     onMount(() => {
+        const intervalStorage = localStorage.getItem("intervals");
+        const distanceStorage = localStorage.getItem("distance");
+        const themeStorage = localStorage.getItem("color-theme");
+
         isDarkMode =
-            localStorage.getItem("color-theme") === "dark" ||
+            themeStorage === "dark" ||
             (!("color-theme" in localStorage) &&
                 window.matchMedia("(prefers-color-scheme: dark)").matches);
 
-        intervals = localStorage.getItem("intervals")
-            ? JSON.parse(localStorage.getItem("intervals"))
+        intervals = intervalStorage
+            ? JSON.parse(intervalStorage)
             : [DEFAULT_INTERVAL];
 
-        distance = localStorage.getItem("distance")
-            ? parseInt(localStorage.getItem("distance"))
-            : 2000;
+        distance = distanceStorage ? parseInt(distanceStorage) : 2000;
 
         loaded = true;
     });
@@ -160,8 +158,14 @@
         let enteredDistance = event.target.value;
 
         if (!enteredDistance.match(/^\d+$/)) return;
-        if (parseInt(enteredDistance) < MIN_DISTANCE) return;
-        if (enteredDistance > MAX_DISTANCE) return;
+        if (parseInt(enteredDistance) < MIN_DISTANCE) {
+            distance = MIN_DISTANCE;
+            return;
+        }
+        if (enteredDistance > MAX_DISTANCE) {
+            distance = MAX_DISTANCE;
+            return;
+        }
 
         distance = parseInt(enteredDistance);
     };
