@@ -13,6 +13,7 @@
 
     const SMALLEST_SIZE = 5;
     const MAX_INTERVALS = 8;
+    const MIN_DISTANCE = 100;
     const MAX_DISTANCE = 100000;
     const DEFAULT_INTERVAL: Interval = {
         size: 100,
@@ -159,7 +160,7 @@
         let enteredDistance = event.target.value;
 
         if (!enteredDistance.match(/^\d+$/)) return;
-        if (parseInt(enteredDistance) <= 0) return;
+        if (parseInt(enteredDistance) < MIN_DISTANCE) return;
         if (enteredDistance > MAX_DISTANCE) return;
 
         distance = parseInt(enteredDistance);
@@ -170,12 +171,12 @@
 
         if (!distanceRawInput.match(/^\d+$/)) {
             toast.error("Distance must be a number");
-        } else if (distanceRawInputNumber <= 0) {
-            toast.error("Distance must be greater than 0 metres");
+        } else if (distanceRawInputNumber < MIN_DISTANCE) {
+            toast.error(`Distance must be greater than ${MIN_DISTANCE} metres`);
             distanceRawInput = distance.toString();
         } else if (parseInt(distanceRawInput) > MAX_DISTANCE) {
             toast.error(
-                `The distance must be less than ${MAX_DISTANCE.toLocaleString()} metres`
+                `Distance must be less than ${MAX_DISTANCE.toLocaleString()} metres`
             );
         }
 
