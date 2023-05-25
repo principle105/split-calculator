@@ -240,13 +240,12 @@
     <h1
         class="text-5xl text-zinc-800 text-center font-bold mb-2 dark:text-white"
     >
-        Split Calculator <span
-            class="dark:bg-zinc-700 bg-zinc-200 bg-opacity-[0.35] dark:bg-opacity-40 rounded-lg p-1"
-            >(<Tooltip
-                showing={showTooltipIndicators}
-                message="Click to edit the distance"
-            >
-                <input
+        Split Calculator <Tooltip
+            showing={showTooltipIndicators}
+            message="Click to edit the distance"
+            ><span
+                class="dark:bg-zinc-700 bg-zinc-200 bg-opacity-[0.35] dark:bg-opacity-40 rounded-lg p-1"
+                >(<input
                     bind:value={distanceRawInput}
                     on:input={handleDistanceInput}
                     on:blur={handleDistanceBlur}
@@ -258,9 +257,9 @@
                     }}
                     style="width: {distanceRawInput.toString().length}ch"
                     class="bg-transparent outline-none w-7"
-                />
-            </Tooltip>m)</span
-        >
+                />m)
+            </span>
+        </Tooltip>
     </h1>
 
     <h2 class="text-2xl text-zinc-700 text-center dark:text-zinc-400">
