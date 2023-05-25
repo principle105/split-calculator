@@ -15,12 +15,12 @@
             : 'opacity-0'} transition-opacity duration-150 ease"
     >
         <div
-            class="bg-zinc-500 dark:bg-zinc-700 rounded-lg px-3 py-2 font-normal text-left shadow-md"
+            class="bg-zinc-500 dark:bg-zinc-850 rounded-lg px-3 py-2 font-normal text-left shadow-md"
         >
             {message}
         </div>
         <div
-            class="w-2 h-2 rotate-45 transform bg-zinc-500 dark:bg-zinc-700 absolute left-1/2 -translate-x-1/2 {top
+            class="w-2 h-2 rotate-45 transform bg-zinc-500 dark:bg-zinc-850 absolute left-1/2 -translate-x-1/2 {top
                 ? '-bottom-1'
                 : '-top-1'}"
         />

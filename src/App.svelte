@@ -387,6 +387,6 @@
     }
 
     :global(.dark .toast) {
-        @apply !bg-zinc-700 !text-white;
+        @apply !bg-zinc-850 !text-white;
     }
 </style>
