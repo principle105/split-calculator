@@ -39,20 +39,24 @@
     $: isDarkMode, updateTheme();
 
     onMount(() => {
-        const intervalStorage = localStorage.getItem("intervals");
-        const distanceStorage = localStorage.getItem("distance");
-        const themeStorage = localStorage.getItem("color-theme");
+        const loadedURL = loadURL();
 
-        isDarkMode =
-            themeStorage === "dark" ||
-            (!("color-theme" in localStorage) &&
-                window.matchMedia("(prefers-color-scheme: dark)").matches);
+        if (!loadedURL) {
+            const intervalStorage = localStorage.getItem("intervals");
+            const distanceStorage = localStorage.getItem("distance");
+            const themeStorage = localStorage.getItem("color-theme");
 
-        intervals = intervalStorage
-            ? JSON.parse(intervalStorage)
-            : [DEFAULT_INTERVAL];
+            isDarkMode =
+                themeStorage === "dark" ||
+                (!("color-theme" in localStorage) &&
+                    window.matchMedia("(prefers-color-scheme: dark)").matches);
 
-        distance = distanceStorage ? parseInt(distanceStorage) : 2000;
+            intervals = intervalStorage
+                ? JSON.parse(intervalStorage)
+                : [DEFAULT_INTERVAL];
+
+            distance = distanceStorage ? parseInt(distanceStorage) : 2000;
+        }
 
         loaded = true;
     });
@@ -209,6 +213,52 @@
         const newInterval = { ...DEFAULT_INTERVAL, size: SMALLEST_SIZE };
         intervals = [...intervals, newInterval];
     };
+
+    const createURL = () => {
+        // Convert intervals and distance into a string which can be put into a url and decoded
+        const encodedIntervals = window.btoa(
+            JSON.stringify({
+                intervals,
+                distance,
+            })
+        );
+
+        return encodedIntervals;
+    };
+
+    const loadURL = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const encodedIntervals = urlParams.get("i");
+
+        if (encodedIntervals) {
+            window.history.replaceState(null, "", "/");
+
+            try {
+                const decodedIntervals = JSON.parse(
+                    window.atob(encodedIntervals)
+                );
+
+                intervals = decodedIntervals.intervals;
+                distance = decodedIntervals.distance;
+            } catch (e) {
+                toast.error("Failed to load splits from URL");
+                return false;
+            }
+
+            toast.success("Successfully loaded splits from URL");
+            return true;
+        }
+        return null;
+    };
+
+    const copyURLToClipboard = () => {
+        const encodedIntervals = createURL();
+        const url = `${window.location.origin}/?i=${encodedIntervals}`;
+
+        navigator.clipboard.writeText(url);
+
+        toast.success("Copied to clipboard");
+    };
 </script>
 
 <Toaster toastOptions={{ className: "toast" }} />
@@ -245,7 +295,8 @@
     >
         Split Calculator <Tooltip
             showing={showTooltipIndicators}
-            message="Click to edit the distance"
+            message="Click to change the total distance"
+            positioning="top-[calc(-100%-1rem)]"
             ><span
                 class="dark:bg-zinc-700 bg-zinc-200 !bg-opacity-[0.35] rounded-lg p-1"
                 >(<input
@@ -279,18 +330,41 @@
         </Tooltip>
     </h2>
 
-    <Tooltip
-        showing={showTooltipIndicators}
-        positioning="top-[calc(-100%-1.5rem)]"
-        message="Click to add a new section"
-    >
-        <button
-            on:click={addSection}
-            class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-lg text-xs px-5 py-2.5 mr-2 mb-2 dark:bg-indigo-500 dark:hover:bg-indigo-700"
+    <div class="flex gap-1 my-2 justify-between">
+        <Tooltip
+            showing={showTooltipIndicators}
+            positioning="top-[calc(-100%-2rem)]"
+            message="Click to add a new section"
         >
-            Add Section
-        </button>
-    </Tooltip>
+            <button
+                on:click={addSection}
+                class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-md mr-5 text-xs px-5 py-2.5 dark:bg-indigo-500 dark:hover:bg-indigo-700 transition-colors"
+            >
+                Add Section
+            </button>
+        </Tooltip>
+
+        <Tooltip
+            showing={showTooltipIndicators}
+            top={false}
+            positioning="bottom-[calc(-100%-0.5rem)]"
+            message="Share your plan with others"
+        >
+            <div
+                class="flex items-center border border-emerald-400 rounded-md overflow-hidden text-xs"
+            >
+                <div class="px-2 dark:text-white">
+                    {window.location.origin}/?i=eyJpb
+                </div>
+                <button
+                    on:click={copyURLToClipboard}
+                    class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium px-3.5 py-2 dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors"
+                >
+                    Copy Share Link
+                </button>
+            </div>
+        </Tooltip>
+    </div>
 
     <!-- Split pane -->
     <div class="overflow-hidden rounded-md">
@@ -332,7 +406,7 @@
                                 on:click={() => {
                                     removeInterval(i);
                                 }}
-                                class="text-zinc-800 font-medium rounded-lg text-sm p-1 text-center inline-flex items-center dark:text-zinc-200"
+                                class="text-zinc-800 font-medium rounded-lg text-sm p-1 text-center inline-flex items-center dark:text-zinc-200 transition-colors"
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -366,24 +440,28 @@
             principle105
         </a>
     </div>
-
-    <button on:click={() => (showTooltipIndicators = !showTooltipIndicators)}>
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            class="w-8 h-8"
-            fill="currentColor"
+    <div class="flex items-center gap-1.5">
+        <span>Confused?</span>
+        <button
+            on:click={() => (showTooltipIndicators = !showTooltipIndicators)}
         >
-            <path
-                d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z"
-            />
-        </svg>
-    </button>
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                class="w-7 h-7"
+                fill="currentColor"
+            >
+                <path
+                    d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z"
+                />
+            </svg>
+        </button>
+    </div>
 </footer>
 
 <style global lang="postcss">
     :global(.dark .splitpanes__splitter) {
-        @apply !bg-zinc-500 !border-zinc-400;
+        @apply !bg-zinc-500 !border-zinc-600;
     }
 
     :global(.dark .toast) {
