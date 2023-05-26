@@ -354,12 +354,15 @@
             <div
                 class="flex items-center border border-emerald-400 rounded-md overflow-hidden text-xs"
             >
-                <div class="px-2 dark:text-white">
-                    {window.location.origin}/?i=eyJpb
+                <div class="pl-2 pr-1 dark:text-white relative">
+                    <span>{window.location.origin}/?i=eyJpb</span>
+                    <div
+                        class="absolute bg-white dark:bg-zinc-800 h-full w-1 bottom-0 right-1"
+                    />
                 </div>
                 <button
                     on:click={copyURLToClipboard}
-                    class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium px-3.5 py-2 dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors"
+                    class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium px-3.5 py-2.5 dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors"
                 >
                     Copy Share Link
                 </button>
