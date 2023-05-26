@@ -264,7 +264,7 @@
 
 <Toaster toastOptions={{ className: "toast" }} />
 <header class="absolute right-8 top-8">
-    <button on:click={toggleMode}>
+    <button on:click={toggleMode} aria-label="Change theme">
         {#if isDarkMode}
             <svg
                 class="w-10 h-10 text-white"
@@ -300,6 +300,7 @@
             positioning="top-[calc(-100%-1rem)]"
             ><span
                 class="dark:bg-zinc-700 bg-zinc-200 !bg-opacity-[0.35] rounded-lg p-1"
+                aria-label="Change the total distance"
                 >(<input
                     bind:value={distanceRawInput}
                     on:input={handleDistanceInput}
@@ -387,12 +388,13 @@
                         size={interval.size}
                         class="px-2 py-3 flex flex-col gap-1 dark:!bg-zinc-700 dark:!bg-opacity-90"
                     >
-                        <h4 class="text-sm dark:text-white">
+                        <h3 class="text-sm dark:text-white">
                             {distance ? getDistance(interval.size) : 0}m
-                        </h4>
+                        </h3>
 
                         <input
                             type="text"
+                            aria-label="Split time"
                             bind:value={interval.rawInput}
                             on:input={(e) => handleSplitInput(e, i)}
                             on:blur={() => handleSplitBlur(i)}
@@ -410,6 +412,7 @@
                                 on:click={() => {
                                     removeInterval(i);
                                 }}
+                                aria-label="Remove section"
                                 class="text-zinc-800 font-medium rounded-lg text-sm p-1 text-center inline-flex items-center dark:text-zinc-200 transition-colors"
                             >
                                 <svg
@@ -447,6 +450,7 @@
     <div class="flex items-center gap-1.5">
         <span>Confused?</span>
         <button
+            aria-label="Toggle tooltip indicators"
             on:click={() => (showTooltipIndicators = !showTooltipIndicators)}
         >
             <svg
