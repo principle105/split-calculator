@@ -331,7 +331,7 @@
         </Tooltip>
     </h2>
 
-    <div class="flex gap-1 mb-2 mt-3 justify-between">
+    <div class="flex gap-1 mb-2 mt-4 justify-between">
         <Tooltip
             showing={showTooltipIndicators}
             positioning="top-[calc(-100%-2rem)]"
