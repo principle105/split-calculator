@@ -39,17 +39,18 @@
     $: isDarkMode, updateTheme();
 
     onMount(() => {
+        const themeStorage = localStorage.getItem("color-theme");
+
+        isDarkMode =
+            themeStorage === "dark" ||
+            (!("color-theme" in localStorage) &&
+                window.matchMedia("(prefers-color-scheme: dark)").matches);
+
         const loadedURL = loadURL();
 
         if (!loadedURL) {
             const intervalStorage = localStorage.getItem("intervals");
             const distanceStorage = localStorage.getItem("distance");
-            const themeStorage = localStorage.getItem("color-theme");
-
-            isDarkMode =
-                themeStorage === "dark" ||
-                (!("color-theme" in localStorage) &&
-                    window.matchMedia("(prefers-color-scheme: dark)").matches);
 
             intervals = intervalStorage
                 ? JSON.parse(intervalStorage)
