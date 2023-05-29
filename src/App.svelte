@@ -363,7 +363,7 @@
                 </div>
                 <button
                     on:click={copyURLToClipboard}
-                    class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium px-3.5 py-2.5 dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors"
+                    class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium px-3.5 py-[0.575rem] dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors"
                 >
                     Copy Share Link
                 </button>
