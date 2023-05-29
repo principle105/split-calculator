@@ -3,8 +3,6 @@
     export let message: string;
     export let positioning: string = "-top-full";
     export let top: boolean = true;
-
-    // TODO: Add automatic top positioning based on the number of lines
 </script>
 
 <div class="relative inline-block z-50">

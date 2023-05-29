@@ -2,6 +2,7 @@
     import { onMount } from "svelte";
     import { Pane, Splitpanes } from "svelte-splitpanes";
     import toast, { Toaster } from "svelte-french-toast";
+
     import Tooltip from "./components/Tooltip.svelte";
 
     interface Interval {
@@ -11,10 +12,10 @@
         rawInput: string;
     }
 
-    const SMALLEST_SIZE = 5;
-    const MAX_INTERVALS = 8;
-    const MIN_DISTANCE = 100;
-    const MAX_DISTANCE = 100000;
+    const SMALLEST_INTERVAL_SIZE: number = 5;
+    const MAX_INTERVALS: number = 8;
+    const MIN_DISTANCE: number = 100;
+    const MAX_DISTANCE: number = 100000;
     const DEFAULT_INTERVAL: Interval = {
         size: 100,
         minutes: 2,
@@ -27,7 +28,7 @@
 
     let intervals: Interval[] = [DEFAULT_INTERVAL];
 
-    let loaded: boolean = false;
+    let isLoaded: boolean = false;
     let isDarkMode: boolean = false;
     let showTooltipIndicators: boolean = false;
 
@@ -35,7 +36,7 @@
     $: distance, localStorage.setItem("distance", distance.toString());
 
     $: minInc = Math.pow(10, Math.floor(Math.log10(distance))) / 100;
-    $: average = intervals ? calculateAverageTime() : 0;
+    $: averageTime = intervals ? calculateAverageTime() : 0;
     $: isDarkMode, updateTheme();
 
     onMount(() => {
@@ -46,7 +47,7 @@
             (!("color-theme" in localStorage) &&
                 window.matchMedia("(prefers-color-scheme: dark)").matches);
 
-        const loadedURL = loadURL();
+        const loadedURL = loadShareURL();
 
         if (!loadedURL) {
             const intervalStorage = localStorage.getItem("intervals");
@@ -57,12 +58,13 @@
                 : [DEFAULT_INTERVAL];
 
             distance = distanceStorage ? parseInt(distanceStorage) : 2000;
+            distanceRawInput = distance.toString();
         }
 
-        loaded = true;
+        isLoaded = true;
     });
 
-    const toggleMode = () => {
+    const toggleTheme = () => {
         isDarkMode = !isDarkMode;
 
         localStorage.setItem("color-theme", isDarkMode ? "dark" : "light");
@@ -76,7 +78,7 @@
         }
     };
 
-    const formatSeconds = (totalSeconds: number): string => {
+    const formatSecondsAsTimestamp = (totalSeconds: number): string => {
         const date = new Date(totalSeconds * 1000).toISOString();
 
         if (totalSeconds < 1) {
@@ -115,7 +117,7 @@
         return total;
     };
 
-    const formatSplit = (v: Interval) => {
+    const formatSplitAsTimestamp = (v: Interval) => {
         return `${v.minutes}:${v.seconds.toString().padStart(2, "0")}`;
     };
 
@@ -156,7 +158,7 @@
             toast.error("Split must be a valid time");
         }
 
-        intervals[index].rawInput = formatSplit(intervals[index]);
+        intervals[index].rawInput = formatSplitAsTimestamp(intervals[index]);
     };
 
     const handleDistanceInput = (event) => {
@@ -191,7 +193,7 @@
         distanceRawInput = distance.toString();
     };
 
-    const handleResize = (event) => {
+    const handleSectionResize = (event) => {
         intervals = intervals.map((interval, i) => ({
             ...interval,
             size: event.detail[i].size,
@@ -205,17 +207,20 @@
         }
 
         for (let i = intervals.length - 1; i >= 0; i--) {
-            if (intervals[i].size > SMALLEST_SIZE) {
-                intervals[i].size -= SMALLEST_SIZE;
+            if (intervals[i].size > SMALLEST_INTERVAL_SIZE) {
+                intervals[i].size -= SMALLEST_INTERVAL_SIZE;
                 break;
             }
         }
 
-        const newInterval = { ...DEFAULT_INTERVAL, size: SMALLEST_SIZE };
+        const newInterval = {
+            ...DEFAULT_INTERVAL,
+            size: SMALLEST_INTERVAL_SIZE,
+        };
         intervals = [...intervals, newInterval];
     };
 
-    const createURL = () => {
+    const createShareURL = () => {
         // Convert intervals and distance into a string which can be put into a url and decoded
         const encodedIntervals = window.btoa(
             JSON.stringify({
@@ -227,7 +232,7 @@
         return encodedIntervals;
     };
 
-    const loadURL = () => {
+    const loadShareURL = () => {
         const urlParams = new URLSearchParams(window.location.search);
         const encodedIntervals = urlParams.get("i");
 
@@ -249,22 +254,30 @@
             toast.success("Successfully loaded splits from URL");
             return true;
         }
-        return null;
+
+        return false;
     };
 
     const copyURLToClipboard = () => {
-        const encodedIntervals = createURL();
+        const encodedIntervals = createShareURL();
         const url = `${window.location.origin}/?i=${encodedIntervals}`;
 
         navigator.clipboard.writeText(url);
 
         toast.success("Copied to clipboard");
     };
+
+    const blurOnEnter = (e) => {
+        if (e.key === "Enter") {
+            // @ts-ignore
+            e.target.blur();
+        }
+    };
 </script>
 
 <Toaster toastOptions={{ className: "toast" }} />
 <header class="absolute right-8 top-8">
-    <button on:click={toggleMode} aria-label="Change theme">
+    <button on:click={toggleTheme} aria-label="Change theme">
         {#if isDarkMode}
             <svg
                 class="w-10 h-10 text-white"
@@ -305,12 +318,7 @@
                     bind:value={distanceRawInput}
                     on:input={handleDistanceInput}
                     on:blur={handleDistanceBlur}
-                    on:keypress={(e) => {
-                        if (e.key === "Enter") {
-                            // @ts-ignore
-                            e.target.blur();
-                        }
-                    }}
+                    on:keypress={blurOnEnter}
                     style="width: {distanceRawInput.toString().length}ch"
                     class="bg-transparent outline-none w-7"
                 />m)
@@ -326,9 +334,9 @@
             positioning="bottom-[calc(-100%-1.85rem)]"
         >
             <span class="font-medium">
-                {formatSeconds((average / 500) * distance)}</span
+                {formatSecondsAsTimestamp((averageTime / 500) * distance)}</span
             >
-            <span>({formatSeconds(average)})</span>
+            <span>({formatSecondsAsTimestamp(averageTime)})</span>
         </Tooltip>
     </h2>
 
@@ -380,13 +388,16 @@
                 You don't have any sections
             </p>
         {/if}
-        {#if loaded}
-            <Splitpanes on:resize={handleResize} on:resized={handleResize}>
+        {#if isLoaded}
+            <Splitpanes
+                on:resize={handleSectionResize}
+                on:resized={handleSectionResize}
+            >
                 {#each intervals as interval, i}
                     <Pane
-                        minSize={SMALLEST_SIZE}
+                        minSize={SMALLEST_INTERVAL_SIZE}
                         size={interval.size}
-                        class="px-2 py-3 flex flex-col gap-1 dark:!bg-zinc-700 dark:!bg-opacity-90"
+                        class="px-2 py-3 flex flex-col gap-1 dark:!bg-zinc-700 dark:!bg-opacity-90 !bg-zinc-100"
                     >
                         <h3 class="text-sm dark:text-white">
                             {distance ? getDistance(interval.size) : 0}m
@@ -398,12 +409,7 @@
                             bind:value={interval.rawInput}
                             on:input={(e) => handleSplitInput(e, i)}
                             on:blur={() => handleSplitBlur(i)}
-                            on:keypress={(e) => {
-                                if (e.key === "Enter") {
-                                    // @ts-ignore
-                                    e.target.blur();
-                                }
-                            }}
+                            on:keypress={blurOnEnter}
                             maxlength="4"
                             class="outline-none w-full max-w-[3.25rem] py-2 text-center rounded-md dark:bg-zinc-600 dark:text-white my-1"
                         />
