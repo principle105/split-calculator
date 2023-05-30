@@ -446,7 +446,7 @@
         <span>Made by:</span>
         <a
             class="text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-500 transition-color font-medium"
-            href="https://github.com/principle105"
+            href="https://github.com/principle105/split-calculator"
             target="_blank"
             rel="noreferrer"
         >
