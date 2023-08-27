@@ -340,7 +340,7 @@
         </Tooltip>
     </h2>
 
-    <div class="flex gap-1 mb-2 mt-3.5 justify-between">
+    <div class="flex gap-1 mb-2.5 mt-10 justify-between">
         <Tooltip
             showing={showTooltipIndicators}
             positioning="top-[calc(-100%-2rem)]"
@@ -348,7 +348,7 @@
         >
             <button
                 on:click={addSection}
-                class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-md mr-5 text-xs px-5 py-2.5 dark:bg-indigo-500 dark:hover:bg-indigo-700 transition-colors"
+                class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-md mr-5 text-sm px-5 py-2.5 dark:bg-indigo-500 dark:hover:bg-indigo-700 transition-colors"
             >
                 Add Section
             </button>
@@ -361,7 +361,7 @@
             message="Share your plan with others"
         >
             <div
-                class="flex items-center border border-emerald-400 rounded-md overflow-hidden text-xs"
+                class="flex items-center border border-emerald-400 rounded-md overflow-hidden text-sm"
             >
                 <div class="pl-2 pr-1 dark:text-white relative">
                     <span>{window.location.origin}/?i=eyJpb</span>
