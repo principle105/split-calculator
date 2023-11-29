@@ -9,6 +9,7 @@
         size: number;
         minutes: number;
         seconds: number;
+        milliseconds: number;
         rawInput: string;
     }
 
@@ -20,6 +21,7 @@
         size: 100,
         minutes: 2,
         seconds: 0,
+        milliseconds: 0,
         rawInput: "2:00",
     };
 
@@ -78,14 +80,14 @@
         }
     };
 
-    const formatSecondsAsTimestamp = (totalSeconds: number): string => {
-        const date = new Date(totalSeconds * 1000).toISOString();
+    const formatMillisecondsAsTimestamp = (milliseconds: number): string => {
+        const date = new Date(milliseconds).toISOString();
 
-        if (totalSeconds < 1) {
+        if (milliseconds < 1) {
             return "0:00.0";
         }
 
-        if (totalSeconds < 3600) {
+        if (milliseconds < 3600 * 1000) {
             return date.substring(14, 21).replace(/^0+(?!:)/, "");
         }
 
@@ -102,33 +104,54 @@
 
             totalDistance += size * distance;
 
-            total += (v.minutes * 60 + v.seconds) * size;
+            total +=
+                ((v.minutes * 60 + v.seconds) * 1000 + v.milliseconds) * size;
 
             if (i === intervals.length - 1) {
                 let difference = (distance - totalDistance) / distance;
 
                 size += difference;
-                total += (v.minutes * 60 + v.seconds) * difference;
+                total +=
+                    ((v.minutes * 60 + v.seconds) * 1000 + v.milliseconds) *
+                    difference;
             }
 
             v.size = size * 100;
         });
 
+        // In milliseconds
         return total;
     };
 
     const formatSplitAsTimestamp = (v: Interval) => {
-        return `${v.minutes}:${v.seconds.toString().padStart(2, "0")}`;
+        let timestamp = `${v.minutes}:${v.seconds.toString().padStart(2, "0")}`;
+
+        if (v.milliseconds > 0) {
+            timestamp += `.${(v.milliseconds / 100).toString()[0]}`;
+        }
+
+        return timestamp;
     };
 
     const parseTime = (time: string) => {
-        const parts = time.split(":");
-        let minutes = parseInt(parts[0]);
-        let seconds = parseInt(parts[1]);
+        const colonSplitParts = time.split(":");
+        let minutes = parseInt(colonSplitParts[0]);
 
-        return [seconds, minutes];
+        let seconds = 0;
+        let milliseconds = 0;
+
+        if (colonSplitParts.length > 1) {
+            const decimalSplitParts = colonSplitParts[1].split(".");
+
+            seconds = parseInt(decimalSplitParts[0]);
+
+            if (decimalSplitParts.length > 1 && decimalSplitParts[1] !== "") {
+                milliseconds = parseInt(decimalSplitParts[1]) * 100;
+            }
+        }
+
+        return [seconds, minutes, milliseconds];
     };
-
     const getDistance = (size: number) => {
         return Math.round(
             Math.round((size / (100 * minInc)) * distance) * minInc
@@ -140,22 +163,53 @@
         intervals = intervals;
     };
 
-    const handleSplitInput = (event, index: number) => {
-        let enteredTime = event.target.value;
+    const validateTime = (
+        seconds: number,
+        minutes: number,
+        milliseconds: number
+    ) => {
+        if (isNaN(seconds) || isNaN(minutes) || isNaN(milliseconds)) {
+            throw new Error("Invalid split, please input in the format 0:00.0");
+        }
 
-        const [seconds, minutes] = parseTime(enteredTime);
+        if (milliseconds < 0 || milliseconds > 1000) {
+            throw new Error("Milliseconds must take one decimal place");
+        }
 
-        if (minutes >= 0 && minutes < 10 && seconds >= 0 && seconds < 60) {
-            intervals[index].seconds = seconds;
-            intervals[index].minutes = minutes;
+        if (minutes < 0 || minutes >= 10) {
+            throw new Error("Minutes must be between 0 and 9");
+        }
+
+        if (seconds < 0 || seconds >= 60) {
+            throw new Error("Seconds must be between 0 and 59");
         }
     };
 
-    const handleSplitBlur = (index: number) => {
-        const [seconds, minutes] = parseTime(intervals[index].rawInput);
+    const handleSplitInput = (event, index: number) => {
+        let enteredTime = event.target.value;
 
-        if (!(minutes >= 0 && minutes < 10 && seconds >= 0 && seconds < 60)) {
-            toast.error("Split must be a valid time");
+        const [seconds, minutes, milliseconds] = parseTime(enteredTime);
+
+        try {
+            validateTime(seconds, minutes, milliseconds);
+        } catch (e) {
+            return;
+        }
+
+        intervals[index].seconds = seconds;
+        intervals[index].minutes = minutes;
+        intervals[index].milliseconds = milliseconds;
+    };
+
+    const handleSplitBlur = (index: number) => {
+        const [seconds, minutes, milliseconds] = parseTime(
+            intervals[index].rawInput
+        );
+
+        try {
+            validateTime(seconds, minutes, milliseconds);
+        } catch (e) {
+            toast.error(e.message);
         }
 
         intervals[index].rawInput = formatSplitAsTimestamp(intervals[index]);
@@ -334,9 +388,11 @@
             positioning="bottom-[calc(-100%-1.85rem)]"
         >
             <span class="font-medium">
-                {formatSecondsAsTimestamp((averageTime / 500) * distance)}</span
+                {formatMillisecondsAsTimestamp(
+                    (averageTime / 500) * distance
+                )}</span
             >
-            <span>({formatSecondsAsTimestamp(averageTime)})</span>
+            <span>({formatMillisecondsAsTimestamp(averageTime)})</span>
         </Tooltip>
     </h2>
 
@@ -410,8 +466,11 @@
                             on:input={(e) => handleSplitInput(e, i)}
                             on:blur={() => handleSplitBlur(i)}
                             on:keypress={blurOnEnter}
-                            maxlength="4"
-                            class="outline-none w-full max-w-[3.25rem] py-2 text-center rounded-md dark:bg-zinc-600 dark:text-white my-1"
+                            maxlength="6"
+                            class="outline-none w-full max-w-[3.25rem] text-center rounded-md dark:bg-zinc-600 dark:text-white my-1 {interval
+                                .rawInput.length > 4
+                                ? 'text-sm py-2.5'
+                                : 'py-2'}"
                         />
                         <div>
                             <button
