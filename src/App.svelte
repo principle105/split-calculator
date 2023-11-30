@@ -2,6 +2,7 @@
     import { onMount } from "svelte";
     import { Pane, Splitpanes } from "svelte-splitpanes";
     import toast, { Toaster } from "svelte-french-toast";
+    import LZString from "lz-string";
 
     import Tooltip from "./components/Tooltip.svelte";
 
@@ -34,12 +35,22 @@
     let isDarkMode: boolean = false;
     let showTooltipIndicators: boolean = false;
 
-    $: intervals, localStorage.setItem("intervals", JSON.stringify(intervals));
-    $: distance, localStorage.setItem("distance", distance.toString());
+    $: intervals, updateIntervalsInStorage();
+    $: distance, updateDistanceInStorage();
 
     $: minInc = Math.pow(10, Math.floor(Math.log10(distance))) / 100;
     $: averageTime = intervals ? calculateAverageTime() : 0;
     $: isDarkMode, updateTheme();
+
+    const updateDistanceInStorage = () => {
+        if (!isLoaded) return;
+        localStorage.setItem("distance", distance.toString());
+    };
+
+    const updateIntervalsInStorage = () => {
+        if (!isLoaded) return;
+        localStorage.setItem("intervals", JSON.stringify(intervals));
+    };
 
     onMount(() => {
         const themeStorage = localStorage.getItem("color-theme");
@@ -54,6 +65,7 @@
         if (!loadedURL) {
             const intervalStorage = localStorage.getItem("intervals");
             const distanceStorage = localStorage.getItem("distance");
+            console.log(distance);
 
             intervals = intervalStorage
                 ? JSON.parse(intervalStorage)
@@ -261,8 +273,9 @@
         }
 
         for (let i = intervals.length - 1; i >= 0; i--) {
-            if (intervals[i].size > SMALLEST_INTERVAL_SIZE) {
+            if (Math.round(intervals[i].size) > SMALLEST_INTERVAL_SIZE) {
                 intervals[i].size -= SMALLEST_INTERVAL_SIZE;
+                console.log("AFTER", intervals[i].size);
                 break;
             }
         }
@@ -275,8 +288,7 @@
     };
 
     const createShareURL = () => {
-        // Convert intervals and distance into a string which can be put into a url and decoded
-        const encodedIntervals = window.btoa(
+        const encodedIntervals = LZString.compressToEncodedURIComponent(
             JSON.stringify({
                 intervals,
                 distance,
@@ -295,7 +307,7 @@
 
             try {
                 const decodedIntervals = JSON.parse(
-                    window.atob(encodedIntervals)
+                    LZString.decompressFromEncodedURIComponent(encodedIntervals)
                 );
 
                 intervals = decodedIntervals.intervals;
