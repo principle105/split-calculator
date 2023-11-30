@@ -432,7 +432,7 @@
                 class="flex items-center border border-emerald-400 rounded-md overflow-hidden text-sm"
             >
                 <div class="pl-2 pr-1 dark:text-white relative">
-                    <span>{window.location.origin}/?i=eyJpb</span>
+                    <span>{window.location.origin}/?i=N4Igl</span>
                     <div
                         class="absolute bg-white dark:bg-zinc-800 h-full w-1 bottom-0 right-1 transition-colors"
                     />
