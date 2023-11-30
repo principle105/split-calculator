@@ -65,7 +65,6 @@
         if (!loadedURL) {
             const intervalStorage = localStorage.getItem("intervals");
             const distanceStorage = localStorage.getItem("distance");
-            console.log(distance);
 
             intervals = intervalStorage
                 ? JSON.parse(intervalStorage)
@@ -275,7 +274,6 @@
         for (let i = intervals.length - 1; i >= 0; i--) {
             if (Math.round(intervals[i].size) > SMALLEST_INTERVAL_SIZE) {
                 intervals[i].size -= SMALLEST_INTERVAL_SIZE;
-                console.log("AFTER", intervals[i].size);
                 break;
             }
         }
@@ -312,6 +310,7 @@
 
                 intervals = decodedIntervals.intervals;
                 distance = decodedIntervals.distance;
+                distanceRawInput = distance.toString();
             } catch (e) {
                 toast.error("Failed to load splits from URL");
                 return false;
