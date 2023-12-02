@@ -43,6 +43,7 @@
 
     $: minInc = Math.pow(10, Math.floor(Math.log10(distance))) / 100;
     $: averageTime = intervals ? calculateAverageTime() : 0;
+
     $: isDarkMode, updateTheme();
 
     const updateDistanceInStorage = () => {
@@ -82,7 +83,6 @@
 
     const toggleTheme = () => {
         isDarkMode = !isDarkMode;
-
         localStorage.setItem("color-theme", isDarkMode ? "dark" : "light");
     };
 
@@ -136,6 +136,19 @@
         // In milliseconds
         return total;
     };
+
+    // const calculateAverageTime = (): number => {
+    //     const totalDistance = intervals.reduce((acc, v) => acc + v.size, 0);
+    //     const totalMilliseconds = intervals.reduce(
+    //         (acc, v) =>
+    //             acc +
+    //             ((v.minutes * 60 + v.seconds) * 1000 + v.milliseconds) *
+    //                 (v.size / totalDistance),
+    //         0
+    //     );
+
+    //     return totalMilliseconds;
+    // };
 
     const formatSplitAsTimestamp = (v: Interval) => {
         let timestamp = `${v.minutes}:${v.seconds.toString().padStart(2, "0")}`;
@@ -349,7 +362,21 @@
         }
 
         try {
-            const canvas = await html2canvas(splitPaneElement);
+            const style = document.createElement("style");
+            document.head.appendChild(style);
+
+            // Somehow this fixes the input vertical alignment issue a bit
+            style.sheet?.insertRule(
+                "body > div:last-child img { display: inline-block; }"
+            );
+
+            const canvas = await html2canvas(splitPaneElement, {
+                ignoreElements: (element) => {
+                    return element.classList.contains("remove-section");
+                },
+                backgroundColor: "transparent",
+            });
+
             const image = canvas.toDataURL("image/png");
 
             const downloadLink = document.createElement("a");
@@ -507,16 +534,19 @@
     </div>
 
     <!-- Split pane -->
-    <div class="overflow-hidden rounded-md">
-        {#if intervals.length == 0}
-            <p
-                class="py-[3.575rem] text-center bg-zinc-100 text-zinc-800 font-medium dark:!bg-zinc-700 dark:!text-white"
-            >
+    <div class="overflow-hidden rounded-md relative">
+        <p
+            class="py-[3.575rem] text-center bg-zinc-100 text-zinc-800 font-medium dark:!bg-zinc-700 dark:!text-white"
+        >
+            {#if intervals.length == 0}
                 You don't have any sections
-            </p>
-        {/if}
+            {:else}
+                &nbsp
+            {/if}
+        </p>
+
         {#if isLoaded}
-            <div bind:this={splitPaneElement}>
+            <div bind:this={splitPaneElement} class="absolute inset-0">
                 <Splitpanes
                     on:resize={handleSectionResize}
                     on:resized={handleSectionResize}
@@ -525,7 +555,7 @@
                         <Pane
                             minSize={SMALLEST_INTERVAL_SIZE}
                             size={interval.size}
-                            class="px-2 py-4 flex flex-col gap-1 dark:!bg-zinc-700 dark:!bg-opacity-90 !bg-zinc-100"
+                            class="px-2 flex flex-col justify-center gap-1 dark:!bg-zinc-700 !bg-zinc-100"
                         >
                             <h3 class="text-sm dark:text-white">
                                 {distance ? getDistance(interval.size) : 0}m
@@ -539,10 +569,10 @@
                                 on:blur={() => handleSplitBlur(i)}
                                 on:keypress={blurOnEnter}
                                 maxlength="6"
-                                class="outline-none w-full max-w-[3.25rem] text-center rounded-md dark:bg-zinc-600 dark:text-white my-1 {interval
+                                class="outline-none w-full block max-w-[3.25rem] text-center rounded-md dark:bg-zinc-600 dark:text-white my-1 py-2 !leading-6 {interval
                                     .rawInput.length > 4
-                                    ? 'text-sm py-2.5'
-                                    : 'py-2'}"
+                                    ? 'text-sm'
+                                    : 'text-base'}"
                             />
                             <div>
                                 <button
@@ -550,7 +580,7 @@
                                         removeInterval(i);
                                     }}
                                     aria-label="Remove section"
-                                    class="text-zinc-800 font-medium rounded-lg text-sm p-1 text-center inline-flex items-center dark:text-zinc-200 transition-colors"
+                                    class="text-zinc-800 font-medium rounded-lg text-sm p-1 text-center inline-flex items-center dark:text-zinc-200 transition-colors remove-section"
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
