@@ -3,6 +3,7 @@
     import { Pane, Splitpanes } from "svelte-splitpanes";
     import toast, { Toaster } from "svelte-french-toast";
     import LZString from "lz-string";
+    import html2canvas from "html2canvas";
 
     import Tooltip from "./components/Tooltip.svelte";
 
@@ -34,6 +35,8 @@
     let isLoaded: boolean = false;
     let isDarkMode: boolean = false;
     let showTooltipIndicators: boolean = false;
+
+    let splitPaneElement: HTMLElement;
 
     $: intervals, updateIntervalsInStorage();
     $: distance, updateDistanceInStorage();
@@ -338,6 +341,34 @@
             e.target.blur();
         }
     };
+
+    const downloadSplitsAsImage = async () => {
+        if (intervals.length === 0) {
+            toast.error("You don't have any sections");
+            return;
+        }
+
+        try {
+            const canvas = await html2canvas(splitPaneElement);
+            const image = canvas.toDataURL("image/png");
+
+            const downloadLink = document.createElement("a");
+            downloadLink.href = image;
+            downloadLink.download = "splits_image.png";
+
+            downloadLink.click();
+
+            toast.success("Splits exported as image");
+        } catch (error) {
+            toast.error("Failed to export splits as image");
+        }
+    };
+
+    const resetIntervals = () => {
+        if (confirm("Are you sure you want to clear all the sections?")) {
+            intervals = [];
+        }
+    };
 </script>
 
 <Toaster toastOptions={{ className: "toast" }} />
@@ -407,19 +438,48 @@
         </Tooltip>
     </h2>
 
-    <div class="flex gap-1 mb-2.5 mt-10 justify-between">
-        <Tooltip
-            showing={showTooltipIndicators}
-            positioning="top-[calc(-100%-2rem)]"
-            message="Click to add a new section"
-        >
-            <button
-                on:click={addSection}
-                class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-md mr-5 text-sm px-5 py-2.5 dark:bg-indigo-500 dark:hover:bg-indigo-700 transition-colors"
+    <div class="flex mb-2.5 mt-10 justify-between">
+        <div class="flex gap-2">
+            <Tooltip
+                showing={showTooltipIndicators}
+                positioning="top-[calc(-100%-2rem)]"
+                message="Click to add a new section"
             >
-                Add Section
-            </button>
-        </Tooltip>
+                <button
+                    on:click={addSection}
+                    class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-md text-sm px-5 py-2.5 dark:bg-indigo-500 dark:hover:bg-indigo-700 transition-colors"
+                >
+                    Add Section
+                </button>
+            </Tooltip>
+
+            <Tooltip
+                showing={showTooltipIndicators}
+                positioning="bottom-[calc(-100%-2rem)]"
+                message="Export your plan as an image"
+                top={false}
+            >
+                <button
+                    on:click={downloadSplitsAsImage}
+                    class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium rounded-md text-sm px-5 py-2.5 dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors"
+                >
+                    Export as Image
+                </button>
+            </Tooltip>
+
+            <Tooltip
+                showing={showTooltipIndicators}
+                positioning="top-[calc(-100%-2rem)]"
+                message="Clear all the sections"
+            >
+                <button
+                    on:click={resetIntervals}
+                    class="text-white bg-red-600 hover:bg-red-700 font-medium rounded-md text-sm px-5 py-2.5 dark:bg-red-500 dark:hover:bg-red-700 transition-colors"
+                >
+                    Clear Sections
+                </button>
+            </Tooltip>
+        </div>
 
         <Tooltip
             showing={showTooltipIndicators}
@@ -450,62 +510,64 @@
     <div class="overflow-hidden rounded-md">
         {#if intervals.length == 0}
             <p
-                class="py-[3.3rem] text-center bg-zinc-100 text-zinc-800 font-medium dark:!bg-zinc-700 dark:!text-white"
+                class="py-[3.575rem] text-center bg-zinc-100 text-zinc-800 font-medium dark:!bg-zinc-700 dark:!text-white"
             >
                 You don't have any sections
             </p>
         {/if}
         {#if isLoaded}
-            <Splitpanes
-                on:resize={handleSectionResize}
-                on:resized={handleSectionResize}
-            >
-                {#each intervals as interval, i}
-                    <Pane
-                        minSize={SMALLEST_INTERVAL_SIZE}
-                        size={interval.size}
-                        class="px-2 py-3 flex flex-col gap-1 dark:!bg-zinc-700 dark:!bg-opacity-90 !bg-zinc-100"
-                    >
-                        <h3 class="text-sm dark:text-white">
-                            {distance ? getDistance(interval.size) : 0}m
-                        </h3>
+            <div bind:this={splitPaneElement}>
+                <Splitpanes
+                    on:resize={handleSectionResize}
+                    on:resized={handleSectionResize}
+                >
+                    {#each intervals as interval, i}
+                        <Pane
+                            minSize={SMALLEST_INTERVAL_SIZE}
+                            size={interval.size}
+                            class="px-2 py-4 flex flex-col gap-1 dark:!bg-zinc-700 dark:!bg-opacity-90 !bg-zinc-100"
+                        >
+                            <h3 class="text-sm dark:text-white">
+                                {distance ? getDistance(interval.size) : 0}m
+                            </h3>
 
-                        <input
-                            type="text"
-                            aria-label="Split time"
-                            bind:value={interval.rawInput}
-                            on:input={(e) => handleSplitInput(e, i)}
-                            on:blur={() => handleSplitBlur(i)}
-                            on:keypress={blurOnEnter}
-                            maxlength="6"
-                            class="outline-none w-full max-w-[3.25rem] text-center rounded-md dark:bg-zinc-600 dark:text-white my-1 {interval
-                                .rawInput.length > 4
-                                ? 'text-sm py-2.5'
-                                : 'py-2'}"
-                        />
-                        <div>
-                            <button
-                                on:click={() => {
-                                    removeInterval(i);
-                                }}
-                                aria-label="Remove section"
-                                class="text-zinc-800 font-medium rounded-lg text-sm p-1 text-center inline-flex items-center dark:text-zinc-200 transition-colors"
-                            >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 448 512"
-                                    class="w-5 h-5"
-                                    fill="currentColor"
+                            <input
+                                type="text"
+                                aria-label="Split time"
+                                bind:value={interval.rawInput}
+                                on:input={(e) => handleSplitInput(e, i)}
+                                on:blur={() => handleSplitBlur(i)}
+                                on:keypress={blurOnEnter}
+                                maxlength="6"
+                                class="outline-none w-full max-w-[3.25rem] text-center rounded-md dark:bg-zinc-600 dark:text-white my-1 {interval
+                                    .rawInput.length > 4
+                                    ? 'text-sm py-2.5'
+                                    : 'py-2'}"
+                            />
+                            <div>
+                                <button
+                                    on:click={() => {
+                                        removeInterval(i);
+                                    }}
+                                    aria-label="Remove section"
+                                    class="text-zinc-800 font-medium rounded-lg text-sm p-1 text-center inline-flex items-center dark:text-zinc-200 transition-colors"
                                 >
-                                    <path
-                                        d="M32 464a48 48 0 0 0 48 48h288a48 48 0 0 0 48-48V128H32zm272-256a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zM432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16z"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                    </Pane>
-                {/each}
-            </Splitpanes>
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 448 512"
+                                        class="w-5 h-5"
+                                        fill="currentColor"
+                                    >
+                                        <path
+                                            d="M32 464a48 48 0 0 0 48 48h288a48 48 0 0 0 48-48V128H32zm272-256a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zM432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16z"
+                                        />
+                                    </svg>
+                                </button>
+                            </div>
+                        </Pane>
+                    {/each}
+                </Splitpanes>
+            </div>
         {/if}
     </div>
 </main>
