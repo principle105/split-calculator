@@ -354,7 +354,7 @@
 
             const downloadLink = document.createElement("a");
             downloadLink.href = image;
-            downloadLink.download = "splits_image.png";
+            downloadLink.download = "splits.png";
 
             downloadLink.click();
 
