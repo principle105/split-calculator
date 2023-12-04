@@ -401,9 +401,9 @@
 <Toaster toastOptions={{ className: "toast" }} />
 <header class="absolute right-8 top-8">
     <button on:click={toggleTheme} aria-label="Change theme">
-        {#if isDarkMode}
+        {#if !isDarkMode}
             <svg
-                class="w-10 h-10 text-white"
+                class="w-10 h-10 text-zinc-800"
                 fill="currentColor"
                 viewBox="0 0 20 20"
                 xmlns="http://www.w3.org/2000/svg"
@@ -413,7 +413,7 @@
             >
         {:else}
             <svg
-                class="w-10 h-10 text-zinc-800"
+                class="w-10 h-10 text-white"
                 fill="currentColor"
                 viewBox="0 0 20 20"
                 xmlns="http://www.w3.org/2000/svg"
