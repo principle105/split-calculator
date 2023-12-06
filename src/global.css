@@ -6,6 +6,10 @@
     @apply !bg-zinc-500 !border-zinc-600;
 }
 
+.splitpanes--horizontal > .splitpanes__splitter {
+    @apply !h-[8px];
+}
+
 .dark .toast {
     @apply !bg-zinc-850 !text-white;
 }

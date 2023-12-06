@@ -3,7 +3,6 @@
     import { Pane, Splitpanes } from "svelte-splitpanes";
     import toast, { Toaster } from "svelte-french-toast";
     import LZString from "lz-string";
-    import colors from "tailwindcss/colors";
 
     import FaShare from "svelte-icons/fa/FaShare.svelte";
     import FaTrashAlt from "svelte-icons/fa/FaTrashAlt.svelte";
@@ -11,6 +10,7 @@
     import FaFileExport from "svelte-icons/fa/FaFileExport.svelte";
     import FaGithub from "svelte-icons/fa/FaGithub.svelte";
 
+    import colors from "tailwindcss/colors";
     import "./global.css";
 
     interface Interval {
@@ -41,7 +41,6 @@
     let isLoaded: boolean = false;
     let isDarkMode: boolean = false;
     let isVertical: boolean = window.innerWidth < 1000;
-    let showTooltipIndicators: boolean = false;
 
     let splitPaneElement: HTMLElement;
 
@@ -663,10 +662,7 @@
     </a>
     <div class="flex items-center gap-1.5">
         <span class="hidden lg:inline">Confused?</span>
-        <button
-            aria-label="Toggle tooltip indicators"
-            on:click={() => (showTooltipIndicators = !showTooltipIndicators)}
-        >
+        <button aria-label="Start tooltip tutorial">
             <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
