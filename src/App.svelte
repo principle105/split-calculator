@@ -638,7 +638,7 @@
     </div>
 </main>
 <footer
-    class="text-zinc-800 px-3 py-3 text-md lg:text-lg dark:text-white flex flex-col gap-3 lg:flex-row items-center justify-between absolute bottom-0 left-0 lg:right-0"
+    class="text-zinc-800 p-4 text-md lg:text-lg dark:text-white flex flex-col gap-3 lg:flex-row items-center justify-between absolute bottom-0 left-0 lg:right-0"
 >
     <div class="hidden lg:block">
         <span>Made by:</span>
