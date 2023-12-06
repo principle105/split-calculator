@@ -356,15 +356,15 @@
         }
 
         const canvas = document.createElement("canvas");
-        const boxHeight = 200; // Doubled the box height
-        const lineWidth = 4; // Doubled the line width
+        const boxHeight = 200;
+        const lineWidth = 4;
         const totalWidth = intervals.reduce(
             (acc, interval) => acc + interval.size,
             0
         );
-        const scaleFactor = 2000 / totalWidth; // Doubled the scale factor
+        const scaleFactor = 2000 / totalWidth;
         canvas.width = totalWidth * scaleFactor;
-        canvas.height = boxHeight * 2; // Doubled the canvas height
+        canvas.height = boxHeight;
 
         const ctx = canvas.getContext("2d");
         let currentX = 0;
@@ -378,7 +378,7 @@
             ctx.fillStyle = boxColor;
             ctx.fillRect(currentX, 0, boxWidth, boxHeight);
 
-            // Draw the dividing line
+            // Dividing line
             ctx.fillStyle = colors.zinc[300];
             ctx.fillRect(
                 currentX + boxWidth - lineWidth,
@@ -387,15 +387,16 @@
                 boxHeight
             );
 
+            // Split
             ctx.fillStyle = "black";
-            ctx.font = "32px Arial"; // Doubled the font size
+            ctx.font = "32px Arial";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.fillText(rawInput, currentX + boxWidth / 2, boxHeight / 2);
 
-            // Draw the size of the interval above the split
+            // Distance
             ctx.fillStyle = "black";
-            ctx.font = "24px Arial"; // Doubled the font size
+            ctx.font = "24px Arial";
             ctx.textAlign = "center";
             ctx.textBaseline = "bottom";
             ctx.fillText(sizeText, currentX + boxWidth / 2, boxHeight / 2 - 20); // Adjusted the position
@@ -405,8 +406,9 @@
 
         const dataUrl = canvas.toDataURL("image/png");
         const link = document.createElement("a");
+
         link.href = dataUrl;
-        link.download = "colored_boxes.png";
+        link.download = "split_calculator.png";
         link.click();
     };
 
