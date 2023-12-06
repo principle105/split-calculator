@@ -481,7 +481,7 @@
         >
             <div>Split Calculator</div>
             <div
-                class="dark:bg-zinc-700 bg-zinc-200 !bg-opacity-[0.35] rounded-lg"
+                class="dark:bg-zinc-700 bg-zinc-200 !bg-opacity-[0.35] rounded-lg p-1.5"
                 aria-label="Change the total distance"
             >
                 (<input
