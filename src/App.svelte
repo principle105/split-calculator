@@ -3,9 +3,15 @@
     import { Pane, Splitpanes } from "svelte-splitpanes";
     import toast, { Toaster } from "svelte-french-toast";
     import LZString from "lz-string";
-    import html2canvas from "html2canvas";
+    import colors from "tailwindcss/colors";
 
-    import Tooltip from "./components/Tooltip.svelte";
+    import FaShare from "svelte-icons/fa/FaShare.svelte";
+    import FaTrashAlt from "svelte-icons/fa/FaTrashAlt.svelte";
+    import FaPlus from "svelte-icons/fa/FaPlus.svelte";
+    import FaFileExport from "svelte-icons/fa/FaFileExport.svelte";
+    import FaGithub from "svelte-icons/fa/FaGithub.svelte";
+
+    import "./global.css";
 
     interface Interval {
         size: number;
@@ -34,6 +40,7 @@
 
     let isLoaded: boolean = false;
     let isDarkMode: boolean = false;
+    let isVertical: boolean = window.innerWidth < 1000;
     let showTooltipIndicators: boolean = false;
 
     let splitPaneElement: HTMLElement;
@@ -136,19 +143,6 @@
         // In milliseconds
         return total;
     };
-
-    // const calculateAverageTime = (): number => {
-    //     const totalDistance = intervals.reduce((acc, v) => acc + v.size, 0);
-    //     const totalMilliseconds = intervals.reduce(
-    //         (acc, v) =>
-    //             acc +
-    //             ((v.minutes * 60 + v.seconds) * 1000 + v.milliseconds) *
-    //                 (v.size / totalDistance),
-    //         0
-    //     );
-
-    //     return totalMilliseconds;
-    // };
 
     const formatSplitAsTimestamp = (v: Interval) => {
         let timestamp = `${v.minutes}:${v.seconds.toString().padStart(2, "0")}`;
@@ -361,34 +355,59 @@
             return;
         }
 
-        try {
-            const style = document.createElement("style");
-            document.head.appendChild(style);
+        const canvas = document.createElement("canvas");
+        const boxHeight = 200; // Doubled the box height
+        const lineWidth = 4; // Doubled the line width
+        const totalWidth = intervals.reduce(
+            (acc, interval) => acc + interval.size,
+            0
+        );
+        const scaleFactor = 2000 / totalWidth; // Doubled the scale factor
+        canvas.width = totalWidth * scaleFactor;
+        canvas.height = boxHeight * 2; // Doubled the canvas height
 
-            // Somehow this fixes the input vertical alignment issue a bit
-            style.sheet?.insertRule(
-                "body > div:last-child img { display: inline-block; }"
+        const ctx = canvas.getContext("2d");
+        let currentX = 0;
+
+        intervals.forEach((interval) => {
+            const boxWidth = interval.size * scaleFactor;
+            const boxColor = colors.white;
+            const rawInput = interval.rawInput; // Assuming the rawInput is available in the interval object
+            const sizeText = (distance ? getDistance(interval.size) : 0) + "m";
+
+            ctx.fillStyle = boxColor;
+            ctx.fillRect(currentX, 0, boxWidth, boxHeight);
+
+            // Draw the dividing line
+            ctx.fillStyle = colors.zinc[300];
+            ctx.fillRect(
+                currentX + boxWidth - lineWidth,
+                0,
+                lineWidth,
+                boxHeight
             );
 
-            const canvas = await html2canvas(splitPaneElement, {
-                ignoreElements: (element) => {
-                    return element.classList.contains("remove-section");
-                },
-                backgroundColor: "transparent",
-            });
+            ctx.fillStyle = "black";
+            ctx.font = "32px Arial"; // Doubled the font size
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(rawInput, currentX + boxWidth / 2, boxHeight / 2);
 
-            const image = canvas.toDataURL("image/png");
+            // Draw the size of the interval above the split
+            ctx.fillStyle = "black";
+            ctx.font = "24px Arial"; // Doubled the font size
+            ctx.textAlign = "center";
+            ctx.textBaseline = "bottom";
+            ctx.fillText(sizeText, currentX + boxWidth / 2, boxHeight / 2 - 20); // Adjusted the position
 
-            const downloadLink = document.createElement("a");
-            downloadLink.href = image;
-            downloadLink.download = "splits.png";
+            currentX += boxWidth;
+        });
 
-            downloadLink.click();
-
-            toast.success("Splits exported as image");
-        } catch (error) {
-            toast.error("Failed to export splits as image");
-        }
+        const dataUrl = canvas.toDataURL("image/png");
+        const link = document.createElement("a");
+        link.href = dataUrl;
+        link.download = "colored_boxes.png";
+        link.click();
     };
 
     const resetIntervals = () => {
@@ -396,14 +415,39 @@
             intervals = [];
         }
     };
+
+    const updateOrientation = () => {
+        isVertical = window.innerWidth < 1024;
+    };
 </script>
 
+<svelte:window on:resize={updateOrientation} />
+
 <Toaster toastOptions={{ className: "toast" }} />
-<header class="absolute right-8 top-8">
+
+<header
+    class="lg:absolute w-full lg:w-auto lg:top-0 lg:right-0 flex justify-between p-4 lg:p-8"
+>
+    <div class="lg:hidden">
+        <img src="./logo.png" alt="Split Calculator Logo" class="w-10 h-10" />
+    </div>
+    <div
+        class="dark:bg-zinc-700 bg-zinc-200 !bg-opacity-[0.35] rounded-lg text-3xl p-2 dark:text-white text-zinc-800 font-bold lg:hidden"
+        aria-label="Change the total distance"
+    >
+        <input
+            bind:value={distanceRawInput}
+            on:input={handleDistanceInput}
+            on:blur={handleDistanceBlur}
+            on:keypress={blurOnEnter}
+            style="width: {distanceRawInput.toString().length}ch"
+            class="bg-transparent outline-none w-7"
+        />m
+    </div>
     <button on:click={toggleTheme} aria-label="Change theme">
         {#if !isDarkMode}
             <svg
-                class="w-10 h-10 text-zinc-800"
+                class="w-8 h-8 lg:w-10 lg:h-10 text-zinc-800"
                 fill="currentColor"
                 viewBox="0 0 20 20"
                 xmlns="http://www.w3.org/2000/svg"
@@ -413,7 +457,7 @@
             >
         {:else}
             <svg
-                class="w-10 h-10 text-white"
+                class="w-8 h-8 lg:w-10 lg:h-10 text-white"
                 fill="currentColor"
                 viewBox="0 0 20 20"
                 xmlns="http://www.w3.org/2000/svg"
@@ -426,18 +470,20 @@
         {/if}
     </button>
 </header>
-<main class="m-auto w-5/6">
-    <h1
-        class="text-5xl text-zinc-800 text-center font-bold mb-2 dark:text-white"
-    >
-        Split Calculator <Tooltip
-            showing={showTooltipIndicators}
-            message="Click to change the total distance"
-            positioning="top-[calc(-100%-1rem)]"
-            ><span
-                class="dark:bg-zinc-700 bg-zinc-200 !bg-opacity-[0.35] rounded-lg p-1"
+
+<main
+    class="m-auto w-full max-w-screen-xl px-4 grow flex lg:flex-col lg:justify-center gap-4 lg:gap-0"
+>
+    <div class="hidden lg:block">
+        <h1
+            class="text-4xl lg:text-5xl text-zinc-800 font-bold mb-2 dark:text-white flex gap-1 md:gap-2.5 md:flex-row flex-col items-center justify-center"
+        >
+            <div>Split Calculator</div>
+            <div
+                class="dark:bg-zinc-700 bg-zinc-200 !bg-opacity-[0.35] rounded-lg"
                 aria-label="Change the total distance"
-                >(<input
+            >
+                (<input
                     bind:value={distanceRawInput}
                     on:input={handleDistanceInput}
                     on:blur={handleDistanceBlur}
@@ -445,16 +491,11 @@
                     style="width: {distanceRawInput.toString().length}ch"
                     class="bg-transparent outline-none w-7"
                 />m)
-            </span>
-        </Tooltip>
-    </h1>
+            </div>
+        </h1>
 
-    <h2 class="text-2xl text-zinc-700 text-center dark:text-zinc-400">
-        <Tooltip
-            showing={showTooltipIndicators}
-            message="Total time and average split"
-            top={false}
-            positioning="bottom-[calc(-100%-1.85rem)]"
+        <h2
+            class="text-xl lg:text-2xl text-zinc-700 text-center dark:text-zinc-400"
         >
             <span class="font-medium">
                 {formatMillisecondsAsTimestamp(
@@ -462,58 +503,45 @@
                 )}</span
             >
             <span>({formatMillisecondsAsTimestamp(averageTime)})</span>
-        </Tooltip>
-    </h2>
+        </h2>
+    </div>
 
-    <div class="flex mb-2.5 mt-10 justify-between">
-        <div class="flex gap-2">
-            <Tooltip
-                showing={showTooltipIndicators}
-                positioning="top-[calc(-100%-2rem)]"
-                message="Click to add a new section"
+    <div
+        class="flex mb-2.5 lg:mt-10 lg:justify-between flex-col gap-2 lg:flex-row"
+    >
+        <div class="flex gap-2 lg:flex-row flex-col">
+            <button
+                on:click={addSection}
+                class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-indigo-500 dark:hover:bg-indigo-700 transition-colors"
             >
-                <button
-                    on:click={addSection}
-                    class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-md text-sm px-5 py-2.5 dark:bg-indigo-500 dark:hover:bg-indigo-700 transition-colors"
-                >
-                    Add Section
-                </button>
-            </Tooltip>
+                <div class="h-4 w-4 lg:hidden">
+                    <FaPlus />
+                </div>
+                <span class="lg:inline hidden">Add Section</span>
+            </button>
 
-            <Tooltip
-                showing={showTooltipIndicators}
-                positioning="bottom-[calc(-100%-2rem)]"
-                message="Export your plan as an image"
-                top={false}
+            <button
+                on:click={downloadSplitsAsImage}
+                class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors"
             >
-                <button
-                    on:click={downloadSplitsAsImage}
-                    class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium rounded-md text-sm px-5 py-2.5 dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors"
-                >
-                    Export as Image
-                </button>
-            </Tooltip>
+                <div class="w-4 h-4 lg:hidden">
+                    <FaFileExport />
+                </div>
+                <span class="lg:inline hidden">Export as Image</span>
+            </button>
 
-            <Tooltip
-                showing={showTooltipIndicators}
-                positioning="top-[calc(-100%-2rem)]"
-                message="Clear all the sections"
+            <button
+                on:click={resetIntervals}
+                class="text-white bg-red-600 hover:bg-red-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-red-500 dark:hover:bg-red-700 transition-colors"
             >
-                <button
-                    on:click={resetIntervals}
-                    class="text-white bg-red-600 hover:bg-red-700 font-medium rounded-md text-sm px-5 py-2.5 dark:bg-red-500 dark:hover:bg-red-700 transition-colors"
-                >
-                    Clear Sections
-                </button>
-            </Tooltip>
+                <div class="w-4 h-4 lg:hidden">
+                    <FaTrashAlt />
+                </div>
+                <span class="lg:inline hidden">Clear Sections</span>
+            </button>
         </div>
 
-        <Tooltip
-            showing={showTooltipIndicators}
-            top={false}
-            positioning="bottom-[calc(-100%-0.5rem)]"
-            message="Share your plan with others"
-        >
+        {#if !isVertical}
             <div
                 class="flex items-center border border-emerald-400 rounded-md overflow-hidden text-sm"
             >
@@ -523,6 +551,7 @@
                         class="absolute bg-white dark:bg-zinc-800 h-full w-1 bottom-0 right-1 transition-colors"
                     />
                 </div>
+
                 <button
                     on:click={copyURLToClipboard}
                     class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium px-3.5 py-[0.575rem] dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors"
@@ -530,13 +559,24 @@
                     Copy Share Link
                 </button>
             </div>
-        </Tooltip>
+        {:else}
+            <button
+                on:click={copyURLToClipboard}
+                class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors"
+            >
+                <div class="w-4 h-4 lg:hidden">
+                    <FaShare />
+                </div>
+            </button>
+        {/if}
     </div>
 
     <!-- Split pane -->
-    <div class="overflow-hidden rounded-md relative">
+    <div
+        class="overflow-hidden rounded-md relative {isVertical && 'grow'} mb-4"
+    >
         <p
-            class="py-[3.575rem] text-center bg-zinc-100 text-zinc-800 font-medium dark:!bg-zinc-700 dark:!text-white"
+            class="py-[3.575rem] bg-zinc-100 text-zinc-800 font-medium dark:!bg-zinc-700 dark:!text-white h-full flex justify-center items-center"
         >
             {#if intervals.length == 0}
                 You don't have any sections
@@ -550,12 +590,13 @@
                 <Splitpanes
                     on:resize={handleSectionResize}
                     on:resized={handleSectionResize}
+                    horizontal={isVertical}
                 >
                     {#each intervals as interval, i}
                         <Pane
                             minSize={SMALLEST_INTERVAL_SIZE}
                             size={interval.size}
-                            class="px-2 flex flex-col justify-center gap-1 dark:!bg-zinc-700 !bg-zinc-100"
+                            class="px-2 flex lg:flex-col justify-center items-center lg:items-start gap-1 dark:!bg-zinc-700 !bg-zinc-100"
                         >
                             <h3 class="text-sm dark:text-white">
                                 {distance ? getDistance(interval.size) : 0}m
@@ -569,7 +610,7 @@
                                 on:blur={() => handleSplitBlur(i)}
                                 on:keypress={blurOnEnter}
                                 maxlength="6"
-                                class="outline-none w-full block max-w-[3.25rem] text-center rounded-md dark:bg-zinc-600 dark:text-white my-1 py-2 !leading-6 {interval
+                                class="outline-none w-full block max-w-[3.25rem] text-center rounded-md dark:bg-zinc-600 dark:text-white my-1 py-0.5 lg:py-2 !leading-6 {interval
                                     .rawInput.length > 4
                                     ? 'text-sm'
                                     : 'text-base'}"
@@ -580,18 +621,11 @@
                                         removeInterval(i);
                                     }}
                                     aria-label="Remove section"
-                                    class="text-zinc-800 font-medium rounded-lg text-sm p-1 text-center inline-flex items-center dark:text-zinc-200 transition-colors remove-section"
+                                    class="text-zinc-800 font-medium rounded-lg text-sm p-1 text-center inline-flex items-center dark:text-zinc-200 transition-colors"
                                 >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 448 512"
-                                        class="w-5 h-5"
-                                        fill="currentColor"
-                                    >
-                                        <path
-                                            d="M32 464a48 48 0 0 0 48 48h288a48 48 0 0 0 48-48V128H32zm272-256a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zM432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16z"
-                                        />
-                                    </svg>
+                                    <div class="w-4 h-4 lg:w-5 lg:h-5">
+                                        <FaTrashAlt />
+                                    </div>
                                 </button>
                             </div>
                         </Pane>
@@ -602,9 +636,9 @@
     </div>
 </main>
 <footer
-    class="text-zinc-800 px-3 py-3 text-lg dark:text-white flex items-center justify-between"
+    class="text-zinc-800 px-3 py-3 text-md lg:text-lg dark:text-white flex flex-col gap-3 lg:flex-row items-center justify-between absolute bottom-0 left-0 lg:right-0"
 >
-    <div>
+    <div class="hidden lg:block">
         <span>Made by:</span>
         <a
             class="text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-500 transition-color font-medium"
@@ -615,8 +649,18 @@
             principle105
         </a>
     </div>
+    <a
+        class="lg:hidden"
+        href="https://github.com/principle105/split-calculator"
+        target="_blank"
+        rel="noreferrer"
+    >
+        <div class="w-6 h-6">
+            <FaGithub />
+        </div>
+    </a>
     <div class="flex items-center gap-1.5">
-        <span>Confused?</span>
+        <span class="hidden lg:inline">Confused?</span>
         <button
             aria-label="Toggle tooltip indicators"
             on:click={() => (showTooltipIndicators = !showTooltipIndicators)}
@@ -634,13 +678,3 @@
         </button>
     </div>
 </footer>
-
-<style global lang="postcss">
-    :global(.dark .splitpanes__splitter) {
-        @apply !bg-zinc-500 !border-zinc-600;
-    }
-
-    :global(.dark .toast) {
-        @apply !bg-zinc-850 !text-white;
-    }
-</style>

@@ -1,0 +1,11 @@
+@tailwind utilities;
+@tailwind components;
+@tailwind base;
+
+.dark .splitpanes__splitter {
+    @apply !bg-zinc-500 !border-zinc-600;
+}
+
+.dark .toast {
+    @apply !bg-zinc-850 !text-white;
+}
