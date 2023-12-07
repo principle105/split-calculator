@@ -40,7 +40,7 @@
 
     let isLoaded: boolean = false;
     let isDarkMode: boolean = false;
-    let isVertical: boolean = window.innerWidth < 1000;
+    let isVertical: boolean = false;
 
     let splitPaneElement: HTMLElement;
 
@@ -84,6 +84,7 @@
             distanceRawInput = distance.toString();
         }
 
+        isVertical = window.innerWidth < 1024;
         isLoaded = true;
     });
 
@@ -355,54 +356,83 @@
         }
 
         const canvas = document.createElement("canvas");
-        const boxHeight = 200;
-        const lineWidth = 4;
-        const totalWidth = intervals.reduce(
-            (acc, interval) => acc + interval.size,
-            0
-        );
-        const scaleFactor = 2000 / totalWidth;
-        canvas.width = totalWidth * scaleFactor;
-        canvas.height = boxHeight;
-
         const ctx = canvas.getContext("2d");
-        let currentX = 0;
 
-        intervals.forEach((interval) => {
-            const boxWidth = interval.size * scaleFactor;
-            const boxColor = colors.white;
-            const rawInput = interval.rawInput; // Assuming the rawInput is available in the interval object
-            const sizeText = (distance ? getDistance(interval.size) : 0) + "m";
+        const cellWidth = 200;
+        const cellHeight = 60;
+        const columns = 2;
+        const rows = intervals.length + 1;
+        const tableWidth = cellWidth * columns;
+        const tableHeight = cellHeight * rows;
 
-            ctx.fillStyle = boxColor;
-            ctx.fillRect(currentX, 0, boxWidth, boxHeight);
+        canvas.width = tableWidth;
+        canvas.height = tableHeight;
 
-            // Dividing line
-            ctx.fillStyle = colors.zinc[300];
-            ctx.fillRect(
-                currentX + boxWidth - lineWidth,
-                0,
-                lineWidth,
-                boxHeight
+        ctx.strokeStyle = isDarkMode ? colors.zinc[400] : colors.zinc[800];
+        ctx.lineWidth = 2;
+
+        // Drawing the dividers between each cell
+        for (let i = 1; i < rows + 1; i++) {
+            ctx.beginPath();
+            ctx.moveTo(0, i * cellHeight);
+            ctx.lineTo(tableWidth, i * cellHeight);
+            ctx.stroke();
+
+            // Alternating row colours
+            if (i % 2 === 0) {
+                ctx.fillStyle = isDarkMode
+                    ? colors.zinc[700]
+                    : colors.zinc[100];
+            } else {
+                ctx.fillStyle = isDarkMode ? colors.zinc[600] : colors.white;
+            }
+            ctx.fillRect(0, (i - 1) * cellHeight, tableWidth, cellHeight);
+        }
+
+        // Drawing vertical dividers
+        ctx.beginPath();
+        ctx.moveTo(cellWidth, 0);
+        ctx.lineTo(cellWidth, tableHeight);
+        ctx.stroke();
+
+        ctx.font = "16px Arial";
+        ctx.fillStyle = isDarkMode ? colors.white : colors.zinc[800];
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        // Row labels
+        const labelX = cellWidth / 2;
+        const labelY = cellHeight / 2;
+        ctx.fillText("Distance", labelX, labelY);
+        ctx.fillText("Split", labelX + cellWidth, labelY);
+
+        let totalDistance = 0;
+
+        // Adding a row for each interval
+        for (let i = 0; i < rows - 1; i++) {
+            const interval = intervals[i];
+            const x = cellWidth / 2;
+            const y = (i + 1) * cellHeight + cellHeight / 2;
+
+            let distance = getDistance(interval.size);
+
+            ctx.fillText(
+                `${totalDistance}m - ${totalDistance + distance}m`,
+                x,
+                y
             );
+            ctx.fillText(interval.rawInput.toString(), x + cellWidth, y);
 
-            // Split
-            ctx.fillStyle = "black";
-            ctx.font = "32px Arial";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(rawInput, currentX + boxWidth / 2, boxHeight / 2);
+            totalDistance += distance;
+        }
 
-            // Distance
-            ctx.fillStyle = "black";
-            ctx.font = "24px Arial";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "bottom";
-            ctx.fillText(sizeText, currentX + boxWidth / 2, boxHeight / 2 - 20); // Adjusted the position
-
-            currentX += boxWidth;
-        });
-
+        // Border around the table
+        ctx.strokeRect(
+            ctx.lineWidth / 2,
+            ctx.lineWidth / 2,
+            tableWidth - ctx.lineWidth,
+            tableHeight - ctx.lineWidth
+        );
         const dataUrl = canvas.toDataURL("image/png");
         const link = document.createElement("a");
 
@@ -554,40 +584,36 @@
             </button>
         </div>
 
-        {#if !isVertical}
-            <div
-                class="flex items-center border border-emerald-400 rounded-md overflow-hidden text-sm"
-            >
-                <div class="pl-2 pr-1 dark:text-white relative">
-                    <span>{window.location.origin}/?i=N4lg</span>
-                    <div
-                        class="absolute bg-white dark:bg-zinc-800 h-full w-1 bottom-0 right-1 transition-colors"
-                    />
-                </div>
-
-                <button
-                    on:click={copyURLToClipboard}
-                    class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium px-3.5 py-[0.575rem] dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors"
-                >
-                    Copy Share Link
-                </button>
+        <div
+            class="items-center border border-emerald-400 rounded-md overflow-hidden text-sm hidden lg:flex"
+        >
+            <div class="pl-2 pr-1 dark:text-white relative">
+                <span>{window.location.origin}/?i=N4lg</span>
+                <div
+                    class="absolute bg-white dark:bg-zinc-800 h-full w-1 bottom-0 right-1 transition-colors"
+                />
             </div>
-        {:else}
+
             <button
                 on:click={copyURLToClipboard}
-                class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors"
+                class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium px-3.5 py-[0.575rem] dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors"
             >
-                <div class="w-5 h-5 lg:hidden">
-                    <FaShare />
-                </div>
+                Copy Share Link
             </button>
-        {/if}
+        </div>
+
+        <button
+            on:click={copyURLToClipboard}
+            class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors lg:hidden"
+        >
+            <div class="w-5 h-5 lg:hidden">
+                <FaShare />
+            </div>
+        </button>
     </div>
 
     <!-- Split pane -->
-    <div
-        class="overflow-hidden rounded-md relative {isVertical && 'grow'} mb-4"
-    >
+    <div class="overflow-hidden rounded-md relative grow lg:flex-grow-0 mb-4">
         <p
             class="py-[3.575rem] bg-zinc-100 text-zinc-800 font-medium dark:!bg-zinc-700 dark:!text-white h-full flex justify-center items-center"
         >
