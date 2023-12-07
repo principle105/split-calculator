@@ -367,32 +367,18 @@
         canvas.width = tableWidth;
         canvas.height = tableHeight;
 
-        ctx.strokeStyle = isDarkMode ? colors.zinc[400] : colors.zinc[800];
-        ctx.lineWidth = 2;
-
         // Drawing the dividers between each cell
         for (let i = 1; i < rows + 1; i++) {
-            ctx.beginPath();
-            ctx.moveTo(0, i * cellHeight);
-            ctx.lineTo(tableWidth, i * cellHeight);
-            ctx.stroke();
-
             // Alternating row colours
             if (i % 2 === 0) {
                 ctx.fillStyle = isDarkMode
                     ? colors.zinc[700]
-                    : colors.zinc[100];
+                    : colors.zinc[200];
             } else {
                 ctx.fillStyle = isDarkMode ? colors.zinc[600] : colors.white;
             }
             ctx.fillRect(0, (i - 1) * cellHeight, tableWidth, cellHeight);
         }
-
-        // Drawing vertical dividers
-        ctx.beginPath();
-        ctx.moveTo(cellWidth, 0);
-        ctx.lineTo(cellWidth, tableHeight);
-        ctx.stroke();
 
         ctx.font = "16px Arial";
         ctx.fillStyle = isDarkMode ? colors.white : colors.zinc[800];
@@ -425,13 +411,6 @@
             totalDistance += distance;
         }
 
-        // Border around the table
-        ctx.strokeRect(
-            ctx.lineWidth / 2,
-            ctx.lineWidth / 2,
-            tableWidth - ctx.lineWidth,
-            tableHeight - ctx.lineWidth
-        );
         const dataUrl = canvas.toDataURL("image/png");
         const link = document.createElement("a");
 
