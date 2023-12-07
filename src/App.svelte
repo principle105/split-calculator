@@ -427,23 +427,35 @@
 <Toaster toastOptions={{ className: "toast" }} />
 
 <header
-    class="lg:absolute w-full lg:w-auto lg:top-0 lg:right-0 flex justify-between p-4 lg:p-8"
+    class="lg:absolute w-full lg:w-auto lg:top-0 lg:right-0 flex justify-between items-center p-4 lg:p-8"
 >
     <div class="lg:hidden">
-        <img src="./logo.png" alt="Split Calculator Logo" class="w-10 h-10" />
+        <img src="./logo.png" alt="Split Calculator Logo" class="w-11 h-11" />
     </div>
-    <div
-        class="dark:bg-zinc-700 bg-zinc-200 !bg-opacity-[0.35] rounded-lg text-3xl p-2 dark:text-white text-zinc-800 font-bold lg:hidden"
-        aria-label="Change the total distance"
-    >
-        <input
-            bind:value={distanceRawInput}
-            on:input={handleDistanceInput}
-            on:blur={handleDistanceBlur}
-            on:keypress={blurOnEnter}
-            style="width: {distanceRawInput.toString().length}ch"
-            class="bg-transparent outline-none w-7"
-        />m
+    <div class="flex flex-col mt-0.5 lg:hidden">
+        <div
+            class="dark:bg-zinc-700 bg-zinc-200 !bg-opacity-[0.35] rounded-lg text-4xl p-1.5 dark:text-white text-zinc-800 font-bold w-fit mx-auto"
+            aria-label="Change the total distance"
+        >
+            <input
+                bind:value={distanceRawInput}
+                on:input={handleDistanceInput}
+                on:blur={handleDistanceBlur}
+                on:keypress={blurOnEnter}
+                style="width: {distanceRawInput.toString().length}ch"
+                class="bg-transparent outline-none w-7"
+            />m
+        </div>
+        <h2
+            class="text-xl lg:text-2xl text-zinc-700 text-center dark:text-zinc-400 mt-1"
+        >
+            <span class="font-medium">
+                {formatMillisecondsAsTimestamp(
+                    (averageTime / 500) * distance
+                )}</span
+            >
+            <span>({formatMillisecondsAsTimestamp(averageTime)})</span>
+        </h2>
     </div>
     <button on:click={toggleTheme} aria-label="Change theme">
         {#if !isDarkMode}
@@ -515,7 +527,7 @@
                 on:click={addSection}
                 class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-indigo-500 dark:hover:bg-indigo-700 transition-colors"
             >
-                <div class="h-4 w-4 lg:hidden">
+                <div class="h-5 w-5 lg:hidden">
                     <FaPlus />
                 </div>
                 <span class="lg:inline hidden">Add Section</span>
@@ -525,7 +537,7 @@
                 on:click={downloadSplitsAsImage}
                 class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors"
             >
-                <div class="w-4 h-4 lg:hidden">
+                <div class="w-5 h-5 lg:hidden">
                     <FaFileExport />
                 </div>
                 <span class="lg:inline hidden">Export as Image</span>
@@ -535,7 +547,7 @@
                 on:click={resetIntervals}
                 class="text-white bg-red-600 hover:bg-red-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-red-500 dark:hover:bg-red-700 transition-colors"
             >
-                <div class="w-4 h-4 lg:hidden">
+                <div class="w-5 h-5 lg:hidden">
                     <FaTrashAlt />
                 </div>
                 <span class="lg:inline hidden">Clear Sections</span>
@@ -565,7 +577,7 @@
                 on:click={copyURLToClipboard}
                 class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors"
             >
-                <div class="w-4 h-4 lg:hidden">
+                <div class="w-5 h-5 lg:hidden">
                     <FaShare />
                 </div>
             </button>

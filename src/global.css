@@ -7,7 +7,7 @@
 }
 
 .splitpanes--horizontal > .splitpanes__splitter {
-    @apply !h-[8px];
+    @apply !h-[10px];
 }
 
 .dark .toast {
