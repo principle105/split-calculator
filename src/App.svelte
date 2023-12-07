@@ -40,7 +40,7 @@
 
     let isLoaded: boolean = false;
     let isDarkMode: boolean = false;
-    let isVertical: boolean = false;
+    let isVertical: boolean = window.innerWidth < 1024;
 
     let splitPaneElement: HTMLElement;
 
@@ -84,7 +84,6 @@
             distanceRawInput = distance.toString();
         }
 
-        isVertical = window.innerWidth < 1024;
         isLoaded = true;
     });
 
@@ -635,7 +634,7 @@
                         <Pane
                             minSize={SMALLEST_INTERVAL_SIZE}
                             size={interval.size}
-                            class="px-2 flex lg:flex-col justify-center items-center lg:items-start gap-1 dark:!bg-zinc-700 !bg-zinc-100"
+                            class="px-2 flex lg:flex-col justify-center items-center lg:items-start gap-4 lg:gap-1 dark:!bg-zinc-700 !bg-zinc-100"
                         >
                             <h3 class="text-sm dark:text-white">
                                 {distance ? getDistance(interval.size) : 0}m
