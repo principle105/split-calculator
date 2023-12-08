@@ -4,11 +4,13 @@
     import toast, { Toaster } from "svelte-french-toast";
     import LZString from "lz-string";
 
-    import FaShare from "svelte-icons/fa/FaShare.svelte";
     import FaTrashAlt from "svelte-icons/fa/FaTrashAlt.svelte";
     import FaPlus from "svelte-icons/fa/FaPlus.svelte";
     import FaFileExport from "svelte-icons/fa/FaFileExport.svelte";
     import FaGithub from "svelte-icons/fa/FaGithub.svelte";
+    import FaShareAlt from "svelte-icons/fa/FaShareAlt.svelte";
+    import FaUndoAlt from "svelte-icons/fa/FaUndoAlt.svelte";
+    import FaRedoAlt from "svelte-icons/fa/FaRedoAlt.svelte";
 
     import colors from "tailwindcss/colors";
     import "./global.css";
@@ -19,6 +21,11 @@
         seconds: number;
         milliseconds: number;
         rawInput: string;
+    }
+
+    interface SaveState {
+        intervals: Interval[];
+        distance: number;
     }
 
     const SMALLEST_INTERVAL_SIZE: number = 5;
@@ -32,6 +39,7 @@
         milliseconds: 0,
         rawInput: "2:00",
     };
+    const UNDO_LIMIT = 100;
 
     let distance: number = 2000;
     let distanceRawInput: string = distance.toString();
@@ -41,6 +49,9 @@
     let isLoaded: boolean = false;
     let isDarkMode: boolean = false;
     let isVertical: boolean = window.innerWidth < 1024;
+
+    let undoStates: SaveState[] = [];
+    let redoStates: SaveState[] = [];
 
     let splitPaneElement: HTMLElement;
 
@@ -179,6 +190,8 @@
     };
 
     const removeInterval = (index: number) => {
+        savePreviousState();
+
         intervals.splice(index, 1);
         intervals = intervals;
     };
@@ -216,6 +229,8 @@
             return;
         }
 
+        savePreviousState();
+
         intervals[index].seconds = seconds;
         intervals[index].minutes = minutes;
         intervals[index].milliseconds = milliseconds;
@@ -231,6 +246,8 @@
         } catch (e) {
             toast.error(e.message);
         }
+
+        savePreviousState();
 
         intervals[index].rawInput = formatSplitAsTimestamp(intervals[index]);
     };
@@ -264,6 +281,8 @@
             );
         }
 
+        savePreviousState();
+
         distanceRawInput = distance.toString();
     };
 
@@ -279,6 +298,8 @@
             toast.error(`You can have a maximum of ${MAX_INTERVALS} sections`);
             return;
         }
+
+        savePreviousState();
 
         for (let i = intervals.length - 1; i >= 0; i--) {
             if (Math.round(intervals[i].size) > SMALLEST_INTERVAL_SIZE) {
@@ -338,7 +359,7 @@
 
         navigator.clipboard.writeText(url);
 
-        toast.success("Copied to clipboard");
+        toast.success("Share link copied to clipboard");
     };
 
     const blurOnEnter = (e) => {
@@ -417,16 +438,56 @@
         link.href = dataUrl;
         link.download = "split_calculator.png";
         link.click();
+
+        toast.success("Successfully saved image");
     };
 
     const resetIntervals = () => {
-        if (confirm("Are you sure you want to clear all the sections?")) {
+        if (confirm("Are you sure you want to delete all the sections?")) {
+            savePreviousState();
             intervals = [];
         }
     };
 
     const updateOrientation = () => {
         isVertical = window.innerWidth < 1024;
+    };
+
+    const undo = () => {
+        if (undoStates.length > 0) {
+            redoStates.push({ intervals, distance });
+
+            const previousState = undoStates.pop();
+            intervals = previousState.intervals;
+            distance = previousState.distance;
+
+            undoStates = undoStates;
+            redoStates = redoStates;
+        }
+    };
+
+    const redo = () => {
+        if (redoStates.length > 0) {
+            undoStates.push({ intervals, distance });
+
+            const redoState = redoStates.pop();
+            intervals = redoState.intervals;
+            distance = redoState.distance;
+
+            undoStates = undoStates;
+            redoStates = redoStates;
+        }
+    };
+
+    const savePreviousState = () => {
+        undoStates.push({ intervals, distance });
+
+        if (undoStates.length > UNDO_LIMIT) {
+            undoStates.shift();
+        }
+
+        undoStates = undoStates;
+        redoStates = [];
     };
 </script>
 
@@ -533,22 +594,12 @@
         <div class="flex gap-2 lg:flex-row flex-col">
             <button
                 on:click={addSection}
-                class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-indigo-500 dark:hover:bg-indigo-700 transition-colors"
+                class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors"
             >
                 <div class="h-5 w-5 lg:hidden">
                     <FaPlus />
                 </div>
                 <span class="lg:inline hidden">Add Section</span>
-            </button>
-
-            <button
-                on:click={downloadSplitsAsImage}
-                class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors"
-            >
-                <div class="w-5 h-5 lg:hidden">
-                    <FaFileExport />
-                </div>
-                <span class="lg:inline hidden">Export as Image</span>
             </button>
 
             <button
@@ -558,36 +609,79 @@
                 <div class="w-5 h-5 lg:hidden">
                     <FaTrashAlt />
                 </div>
-                <span class="lg:inline hidden">Clear Sections</span>
+                <span class="lg:inline hidden">Delete All</span>
             </button>
         </div>
 
-        <div
-            class="items-center border border-emerald-400 rounded-md overflow-hidden text-sm hidden lg:flex"
-        >
-            <div class="pl-2 pr-1 dark:text-white relative">
-                <span>{window.location.origin}/?i=N4lg</span>
+        <div class="lg:grow flex justify-end lg:order-3">
+            <div class="flex gap-2 lg:flex-row flex-col">
+                <button
+                    on:click={downloadSplitsAsImage}
+                    class="text-white bg-amber-500 hover:bg-amber-600 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 transition-colors"
+                >
+                    <div class="w-5 h-5 lg:hidden">
+                        <FaFileExport />
+                    </div>
+                    <span class="lg:inline hidden">Export as Image</span>
+                </button>
+
                 <div
-                    class="absolute bg-white dark:bg-zinc-800 h-full w-1 bottom-0 right-1 transition-colors"
-                />
-            </div>
+                    class="items-center border border-indigo-400 rounded-md overflow-hidden text-sm hidden lg:flex"
+                >
+                    <div class="pl-2 pr-1 dark:text-white relative">
+                        <span>{window.location.origin}/?i=N4lg</span>
+                        <div
+                            class="absolute bg-white dark:bg-zinc-800 h-full w-1 bottom-0 right-1 transition-colors"
+                        />
+                    </div>
 
-            <button
-                on:click={copyURLToClipboard}
-                class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium px-3.5 py-[0.575rem] dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors"
-            >
-                Copy Share Link
-            </button>
+                    <button
+                        on:click={copyURLToClipboard}
+                        class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium px-3.5 py-[0.575rem] dark:bg-indigo-500 dark:hover:bg-indigo-700 transition-colors"
+                    >
+                        Copy Share Link
+                    </button>
+                </div>
+
+                <button
+                    on:click={copyURLToClipboard}
+                    class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-indigo-500 dark:hover:bg-indigo-700 transition-colors lg:hidden"
+                >
+                    <div class="w-5 h-5 lg:hidden">
+                        <FaShareAlt />
+                    </div>
+                </button>
+            </div>
         </div>
 
-        <button
-            on:click={copyURLToClipboard}
-            class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors lg:hidden"
-        >
-            <div class="w-5 h-5 lg:hidden">
-                <FaShare />
-            </div>
-        </button>
+        <div class="flex gap-2 lg:order-2 lg:flex-row flex-col">
+            <button
+                on:click={undo}
+                class="text-white bg-zinc-600 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-zinc-500 transition-colors {undoStates.length ===
+                0
+                    ? 'dark:opacity-20 opacity-50 !cursor-not-allowed'
+                    : 'hover:bg-zinc-700 dark:hover:bg-zinc-600'}"
+                disabled={undoStates.length === 0}
+            >
+                <div class="w-5 h-5 lg:hidden">
+                    <FaUndoAlt />
+                </div>
+                <span class="lg:inline hidden">Undo</span>
+            </button>
+            <button
+                on:click={redo}
+                class="text-white bg-zinc-600 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-zinc-500 transition-colors {redoStates.length ===
+                0
+                    ? 'dark:opacity-20 opacity-50 !cursor-not-allowed'
+                    : 'dark:hover:bg-zinc-600 hover:bg-zinc-700'}"
+                disabled={redoStates.length === 0}
+            >
+                <div class="w-5 h-5 lg:hidden">
+                    <FaRedoAlt />
+                </div>
+                <span class="lg:inline hidden">Redo</span>
+            </button>
+        </div>
     </div>
 
     <!-- Split pane -->
