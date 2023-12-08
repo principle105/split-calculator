@@ -6,11 +6,13 @@
 
     import FaTrashAlt from "svelte-icons/fa/FaTrashAlt.svelte";
     import FaPlus from "svelte-icons/fa/FaPlus.svelte";
-    import FaFileExport from "svelte-icons/fa/FaFileExport.svelte";
     import FaGithub from "svelte-icons/fa/FaGithub.svelte";
     import FaShareAlt from "svelte-icons/fa/FaShareAlt.svelte";
     import FaUndoAlt from "svelte-icons/fa/FaUndoAlt.svelte";
     import FaRedoAlt from "svelte-icons/fa/FaRedoAlt.svelte";
+    import FaArrowRight from "svelte-icons/fa/FaArrowRight.svelte";
+    import FaArrowLeft from "svelte-icons/fa/FaArrowLeft.svelte";
+    import FaFileExport from "svelte-icons/fa/FaFileExport.svelte";
 
     import colors from "tailwindcss/colors";
     import "./global.css";
@@ -52,6 +54,8 @@
 
     let undoStates: SaveState[] = [];
     let redoStates: SaveState[] = [];
+
+    let tutorialStage: number = 0;
 
     let splitPaneElement: HTMLElement;
 
@@ -558,7 +562,7 @@
 >
     <div class="hidden lg:block">
         <h1
-            class="text-4xl lg:text-5xl text-zinc-800 font-bold mb-2 dark:text-white flex gap-1 md:gap-2.5 md:flex-row flex-col items-center justify-center"
+            class="text-4xl lg:text-5xl text-zinc-800 font-bold mb-1 dark:text-white flex gap-1 md:gap-2.5 md:flex-row flex-col items-center justify-center"
         >
             <div>Split Calculator</div>
             <div
@@ -589,27 +593,25 @@
     </div>
 
     <div
-        class="flex mb-2.5 lg:mt-10 lg:justify-between flex-col gap-2 lg:flex-row"
+        class="flex mb-2.5 lg:mt-12 lg:justify-between flex-col gap-2 lg:flex-row"
     >
         <div class="flex gap-2 lg:flex-row flex-col">
             <button
                 on:click={addSection}
                 class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors"
             >
-                <div class="h-5 w-5 lg:hidden">
+                <div class="h-5 w-5">
                     <FaPlus />
                 </div>
-                <span class="lg:inline hidden">Add Section</span>
             </button>
 
             <button
                 on:click={resetIntervals}
                 class="text-white bg-red-600 hover:bg-red-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-red-500 dark:hover:bg-red-700 transition-colors"
             >
-                <div class="w-5 h-5 lg:hidden">
+                <div class="w-5 h-5">
                     <FaTrashAlt />
                 </div>
-                <span class="lg:inline hidden">Delete All</span>
             </button>
         </div>
 
@@ -624,7 +626,6 @@
                     </div>
                     <span class="lg:inline hidden">Export as Image</span>
                 </button>
-
                 <div
                     class="items-center border border-indigo-400 rounded-md overflow-hidden text-sm hidden lg:flex"
                 >
@@ -659,27 +660,25 @@
                 on:click={undo}
                 class="text-white bg-zinc-600 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-zinc-500 transition-colors {undoStates.length ===
                 0
-                    ? 'dark:opacity-20 opacity-50 !cursor-not-allowed'
+                    ? 'dark:opacity-20 opacity-70 !cursor-not-allowed'
                     : 'hover:bg-zinc-700 dark:hover:bg-zinc-600'}"
                 disabled={undoStates.length === 0}
             >
-                <div class="w-5 h-5 lg:hidden">
+                <div class="w-5 h-5">
                     <FaUndoAlt />
                 </div>
-                <span class="lg:inline hidden">Undo</span>
             </button>
             <button
                 on:click={redo}
                 class="text-white bg-zinc-600 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-zinc-500 transition-colors {redoStates.length ===
                 0
-                    ? 'dark:opacity-20 opacity-50 !cursor-not-allowed'
+                    ? 'dark:opacity-20 opacity-70 !cursor-not-allowed'
                     : 'dark:hover:bg-zinc-600 hover:bg-zinc-700'}"
                 disabled={redoStates.length === 0}
             >
-                <div class="w-5 h-5 lg:hidden">
+                <div class="w-5 h-5">
                     <FaRedoAlt />
                 </div>
-                <span class="lg:inline hidden">Redo</span>
             </button>
         </div>
     </div>
@@ -687,7 +686,7 @@
     <!-- Split pane -->
     <div class="overflow-hidden rounded-md relative grow lg:flex-grow-0 mb-4">
         <p
-            class="py-[3.575rem] bg-zinc-100 text-zinc-800 font-medium dark:!bg-zinc-700 dark:!text-white h-full flex justify-center items-center"
+            class="py-[3.575rem] bg-zinc-200 bg-opacity-50 dark:bg-opacity-100 text-zinc-800 font-medium dark:!bg-zinc-700 dark:!text-white h-full flex justify-center items-center"
         >
             {#if intervals.length == 0}
                 You don't have any sections
@@ -707,7 +706,7 @@
                         <Pane
                             minSize={SMALLEST_INTERVAL_SIZE}
                             size={interval.size}
-                            class="px-2 flex lg:flex-col justify-center items-center lg:items-start gap-4 lg:gap-1 dark:!bg-zinc-700 !bg-zinc-100"
+                            class="px-2 flex lg:flex-col justify-center items-center lg:items-start gap-4 lg:gap-1 dark:!bg-zinc-700 !bg-zinc-200 bg-opacity-50 dark:bg-opacity-100"
                         >
                             <h3 class="text-sm dark:text-white">
                                 {distance ? getDistance(interval.size) : 0}m
@@ -772,7 +771,12 @@
     </a>
     <div class="flex items-center gap-1.5">
         <span class="hidden lg:inline">Confused?</span>
-        <button aria-label="Start tooltip tutorial">
+        <button
+            aria-label="Start tooltip tutorial"
+            on:click={() => {
+                tutorialStage = +!tutorialStage;
+            }}
+        >
             <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -786,3 +790,23 @@
         </button>
     </div>
 </footer>
+
+<div
+    class="absolute bottom-4 left-1/2 right-1/2 -translate-x-1/2 justify-center flex {tutorialStage ===
+        0 && 'opacity-0 invisible'} transition-opacity"
+>
+    <button
+        class="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+    >
+        <div class="w-5 h-5">
+            <FaArrowLeft />
+        </div>
+    </button>
+    <button
+        class="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+    >
+        <div class="w-5 h-5">
+            <FaArrowRight />
+        </div>
+    </button>
+</div>
