@@ -686,7 +686,7 @@
     <!-- Split pane -->
     <div class="overflow-hidden rounded-md relative grow lg:flex-grow-0 mb-4">
         <p
-            class="py-[3.575rem] bg-zinc-200 bg-opacity-[0.3] text-zinc-800 font-medium dark:!bg-zinc-700 dark:!text-white h-full flex justify-center items-center"
+            class="py-[3.575rem] bg-zinc-200/30  text-zinc-800 font-medium dark:!bg-zinc-700 dark:!text-white h-full flex justify-center items-center"
         >
             {#if intervals.length == 0}
                 You don't have any sections
@@ -706,7 +706,7 @@
                         <Pane
                             minSize={SMALLEST_INTERVAL_SIZE}
                             size={interval.size}
-                            class="px-2 flex lg:flex-col justify-center items-center lg:items-start gap-4 lg:gap-1 dark:!bg-zinc-700 !bg-zinc-200 !bg-opacity-[0.3] dark:!bg-opacity-100"
+                            class="px-2 flex lg:flex-col justify-center items-center lg:items-start gap-4 lg:gap-1 dark:!bg-zinc-700 !bg-transparent dark:!bg-opacity-100"
                         >
                             <h3 class="text-sm dark:text-white">
                                 {distance ? getDistance(interval.size) : 0}m
