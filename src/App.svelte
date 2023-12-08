@@ -619,7 +619,7 @@
             <div class="flex gap-2 lg:flex-row flex-col">
                 <button
                     on:click={downloadSplitsAsImage}
-                    class="text-white bg-amber-500 hover:bg-amber-600 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 transition-colors"
+                    class="text-white bg-rose-500 hover:bg-rose-600 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 transition-colors"
                 >
                     <div class="w-5 h-5 lg:hidden">
                         <FaFileExport />
@@ -792,18 +792,18 @@
 </footer>
 
 <div
-    class="absolute bottom-4 left-1/2 right-1/2 -translate-x-1/2 justify-center flex {tutorialStage ===
+    class="absolute bottom-2 lg:bottom-4 left-1/2 right-1/2 -translate-x-1/2 justify-center flex gap-1 {tutorialStage ===
         0 && 'opacity-0 invisible'} transition-opacity"
 >
     <button
-        class="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+        class="text-white bg-indigo-700 hover:bg-indigo-800 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-2 dark:bg-indigo-600 dark:hover:bg-indigo-700"
     >
         <div class="w-5 h-5">
             <FaArrowLeft />
         </div>
     </button>
     <button
-        class="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+        class="text-white bg-indigo-700 hover:bg-indigo-800 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-2 dark:bg-indigo-600 dark:hover:bg-indigo-700"
     >
         <div class="w-5 h-5">
             <FaArrowRight />
