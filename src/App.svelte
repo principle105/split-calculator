@@ -10,8 +10,6 @@
     import FaShareAlt from "svelte-icons/fa/FaShareAlt.svelte";
     import FaUndoAlt from "svelte-icons/fa/FaUndoAlt.svelte";
     import FaRedoAlt from "svelte-icons/fa/FaRedoAlt.svelte";
-    import FaArrowRight from "svelte-icons/fa/FaArrowRight.svelte";
-    import FaArrowLeft from "svelte-icons/fa/FaArrowLeft.svelte";
     import FaFileExport from "svelte-icons/fa/FaFileExport.svelte";
 
     import colors from "tailwindcss/colors";
@@ -30,6 +28,11 @@
         distance: number;
     }
 
+    interface TutorialText {
+        title: string;
+        description: string;
+    }
+
     const SMALLEST_INTERVAL_SIZE: number = 5;
     const MAX_INTERVALS: number = 8;
     const MIN_DISTANCE: number = 100;
@@ -41,6 +44,30 @@
         milliseconds: 0,
         rawInput: "2:00",
     };
+    const TUTORIAL_INTERVALS: Interval[] = [
+        {
+            size: 10,
+            minutes: 1,
+            seconds: 43,
+            milliseconds: 0,
+            rawInput: "1:43",
+        },
+        {
+            size: 20,
+            minutes: 1,
+            seconds: 44,
+            milliseconds: 0,
+            rawInput: "1:44",
+        },
+
+        {
+            size: 70,
+            minutes: 1,
+            seconds: 45,
+            milliseconds: 0,
+            rawInput: "1:45",
+        },
+    ];
     const UNDO_LIMIT = 100;
 
     let distance: number = 2000;
@@ -54,6 +81,45 @@
 
     let undoStates: SaveState[] = [];
     let redoStates: SaveState[] = [];
+
+    $: intervalDisplay = tutorialStage === 0 ? intervals : TUTORIAL_INTERVALS;
+
+    const tutorialTexts: TutorialText[] = [
+        {
+            title: "View Your Sections",
+            description:
+                "Each section represents an interval of distance in your piece. Drag the bar to adjust its size.",
+        },
+        {
+            title: "Edit Section",
+            description:
+                "Adjust the split of an interval by editing the input.",
+        },
+        {
+            title: "Edit Section",
+            description:
+                "Add a new section by clicking the + button. Delete all sections by clicking the 🗑️ button. Use the undo or redo button to move between your edit history.",
+        },
+        {
+            title: "Edit Distance",
+            description:
+                "Change the your piece's distance by editing the distance input.",
+        },
+        {
+            title: "View Total Time",
+            description:
+                "View the total time it would take to complete your piece.",
+        },
+        {
+            title: "Export Your Pieces",
+            description:
+                "Export your piece as an image and print it out. Use it as a reference during your workouts.",
+        },
+        {
+            title: "Share Your Piece",
+            description: "Share your piece with your friends or coaches.",
+        },
+    ];
 
     let tutorialStage: number = 0;
 
@@ -499,15 +565,22 @@
 
 <Toaster toastOptions={{ className: "toast" }} />
 
+<div
+    class="absolute backdrop-filter backdrop-blur-lg bg-zinc-600/50 dark:bg-transparent inset-0 z-40 transition-opacity duration-300 {tutorialStage ===
+        0 && 'opacity-0 invisible'}"
+/>
+
 <header
     class="lg:absolute w-full lg:w-auto lg:top-0 lg:right-0 flex justify-between items-center p-4 lg:p-8"
+    id="loading"
 >
     <div class="lg:hidden">
         <img src="./logo.png" alt="Split Calculator Logo" class="w-11 h-11" />
     </div>
     <div class="flex flex-col mt-0.5 lg:hidden">
         <div
-            class="dark:bg-zinc-700 bg-zinc-200 !bg-opacity-[0.35] rounded-lg text-4xl p-1.5 dark:text-white text-zinc-800 font-bold w-fit mx-auto"
+            class="dark:bg-zinc-700 bg-zinc-200 !bg-opacity-[0.35] rounded-lg text-4xl p-1.5 dark:text-white text-zinc-800 font-bold w-fit mx-auto {tutorialStage ===
+                4 && 'z-50'}"
             aria-label="Change the total distance"
         >
             <input
@@ -520,7 +593,8 @@
             />m
         </div>
         <h2
-            class="text-xl lg:text-2xl text-zinc-700 text-center dark:text-zinc-400 mt-1"
+            class="text-xl lg:text-2xl text-zinc-700 text-center dark:text-zinc-400 mt-1 {tutorialStage ===
+                5 && 'z-50'}"
         >
             <span class="font-medium">
                 {formatMillisecondsAsTimestamp(
@@ -560,13 +634,16 @@
 <main
     class="m-auto w-full max-w-screen-xl px-4 grow flex lg:flex-col lg:justify-center gap-4 lg:gap-0"
 >
-    <div class="hidden lg:block">
+    <div class="hidden lg:block {tutorialStage === 5 && 'z-50'}">
         <h1
             class="text-4xl lg:text-5xl text-zinc-800 font-bold mb-1 dark:text-white flex gap-1 md:gap-2.5 md:flex-row flex-col items-center justify-center"
         >
             <div>Split Calculator</div>
             <div
-                class="dark:bg-zinc-700 bg-zinc-200 !bg-opacity-[0.35] rounded-lg p-1.5"
+                class="rounded-lg p-1.5 dark:bg-zinc-700 {tutorialStage === 4 ||
+                tutorialStage === 5
+                    ? 'z-50 bg-white'
+                    : '!bg-opacity-[0.45] bg-zinc-200'}"
                 aria-label="Change the total distance"
             >
                 (<input
@@ -595,7 +672,10 @@
     <div
         class="flex mb-2.5 lg:mt-12 lg:justify-between flex-col gap-2 lg:flex-row"
     >
-        <div class="flex gap-2 lg:flex-row flex-col">
+        <div
+            class="flex gap-2 lg:flex-row flex-col {tutorialStage === 3 &&
+                'z-50'}"
+        >
             <button
                 on:click={addSection}
                 class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors"
@@ -619,7 +699,8 @@
             <div class="flex gap-2 lg:flex-row flex-col">
                 <button
                     on:click={downloadSplitsAsImage}
-                    class="text-white bg-rose-500 hover:bg-rose-600 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 transition-colors"
+                    class="text-white bg-rose-500 hover:bg-rose-600 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 transition-colors {tutorialStage ===
+                        6 && 'z-50'}"
                 >
                     <div class="w-5 h-5 lg:hidden">
                         <FaFileExport />
@@ -627,7 +708,8 @@
                     <span class="lg:inline hidden">Export as Image</span>
                 </button>
                 <div
-                    class="items-center border border-indigo-400 rounded-md overflow-hidden text-sm hidden lg:flex"
+                    class="items-center border border-indigo-400 rounded-md overflow-hidden text-sm hidden lg:flex bg-white dark:bg-zinc-800 {tutorialStage ===
+                        7 && 'z-50'}"
                 >
                     <div class="pl-2 pr-1 dark:text-white relative">
                         <span>{window.location.origin}/?i=N4lg</span>
@@ -655,7 +737,10 @@
             </div>
         </div>
 
-        <div class="flex gap-2 lg:order-2 lg:flex-row flex-col">
+        <div
+            class="flex gap-2 lg:order-2 lg:flex-row flex-col {tutorialStage ===
+                3 && 'z-50'}"
+        >
             <button
                 on:click={undo}
                 class="text-white bg-zinc-600 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-zinc-500 transition-colors {undoStates.length ===
@@ -684,7 +769,10 @@
     </div>
 
     <!-- Split pane -->
-    <div class="overflow-hidden rounded-md relative grow lg:flex-grow-0 mb-4">
+    <div
+        class="overflow-hidden rounded-md relative grow lg:flex-grow-0 mb-4 {tutorialStage ===
+            1 && 'z-50 bg-white dark:bg-transparent'}"
+    >
         <p
             class="py-[3.575rem] bg-zinc-200/30  text-zinc-800 font-medium dark:!bg-zinc-700 dark:!text-white h-full flex justify-center items-center"
         >
@@ -702,7 +790,7 @@
                     on:resized={handleSectionResize}
                     horizontal={isVertical}
                 >
-                    {#each intervals as interval, i}
+                    {#each intervalDisplay as interval, i}
                         <Pane
                             minSize={SMALLEST_INTERVAL_SIZE}
                             size={interval.size}
@@ -720,10 +808,12 @@
                                 on:blur={() => handleSplitBlur(i)}
                                 on:keypress={blurOnEnter}
                                 maxlength="6"
-                                class="outline-none w-full block max-w-[3.25rem] text-center rounded-md dark:bg-zinc-600 dark:text-white my-1 py-0.5 lg:py-2 !leading-6 {interval
+                                class="outline-none w-full block max-w-[3.25rem] text-center rounded-md  dark:text-white my-1 py-0.5 lg:py-2 !leading-6 {interval
                                     .rawInput.length > 4
                                     ? 'text-sm'
-                                    : 'text-base'}"
+                                    : 'text-base'} {tutorialStage === 2
+                                    ? 'z-50 dark:bg-zinc-500'
+                                    : 'dark:bg-zinc-600'}"
                             />
                             <div>
                                 <button
@@ -769,7 +859,7 @@
             <FaGithub />
         </div>
     </a>
-    <div class="flex items-center gap-1.5">
+    <div class="flex items-center gap-1.5 lg:z-50">
         <span class="hidden lg:inline">Confused?</span>
         <button
             aria-label="Start tooltip tutorial"
@@ -792,21 +882,51 @@
 </footer>
 
 <div
-    class="absolute bottom-2 lg:bottom-4 left-1/2 right-1/2 -translate-x-1/2 justify-center flex gap-1 {tutorialStage ===
-        0 && 'opacity-0 invisible'} transition-opacity"
+    class="absolute bottom-2 lg:bottom-3 left-2 right-2 flex justify-center transition-opacity z-[60] duration-300 {tutorialStage ===
+        0 && 'opacity-0 invisible'}"
 >
-    <button
-        class="text-white bg-indigo-700 hover:bg-indigo-800 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-2 dark:bg-indigo-600 dark:hover:bg-indigo-700"
+    <div
+        class="absolute bottom-full w-full max-w-screen-sm transition-opacity duration-500 bg-white dark:bg-zinc-850 rounded-lg p-4 lg:p-5 text-zinc-800 dark:text-white {tutorialStage !==
+        0
+            ? 'opacity-100'
+            : 'opacity-0'}"
     >
-        <div class="w-5 h-5">
-            <FaArrowLeft />
+        {#if tutorialStage !== 0}
+            {@const tutorialText = tutorialTexts[tutorialStage - 1]}
+            <h3 class="text-lg lg:text-xl font-bold mb-2 lg:mb-3">
+                {tutorialText.title}
+            </h3>
+            <div
+                class="mb-3 text-zinc-600 dark:text-zinc-400 text-sm lg:text-base"
+            >
+                {tutorialText.description}
+            </div>
+        {/if}
+        <div class="flex gap-1.5 justify-end">
+            <button
+                class="text-white bg-indigo-600 dark:bg-indigo-500 font-medium rounded-md text-sm py-2 px-3 lg:px-5 lg:py-2.5 transition-colors {tutorialStage ===
+                1
+                    ? 'opacity-40'
+                    : 'dark:hover:bg-indigo-700 hover:bg-indigo-700'}"
+                disabled={tutorialStage === 1}
+                on:click={() => {
+                    tutorialStage -= 1;
+                }}
+            >
+                Back
+            </button>
+            <button
+                on:click={() => {
+                    tutorialStage += 1;
+
+                    if (tutorialStage > tutorialTexts.length) {
+                        tutorialStage = 0;
+                    }
+                }}
+                class="text-white bg-indigo-600 dark:bg-indigo-500 dark:hover:bg-indigo-700 hover:bg-indigo-700 font-medium rounded-md text-sm py-2 px-3 lg:px-5 lg:py-2.5 transition-colors"
+            >
+                Next
+            </button>
         </div>
-    </button>
-    <button
-        class="text-white bg-indigo-700 hover:bg-indigo-800 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-2 dark:bg-indigo-600 dark:hover:bg-indigo-700"
-    >
-        <div class="w-5 h-5">
-            <FaArrowRight />
-        </div>
-    </button>
+    </div>
 </div>
