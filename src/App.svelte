@@ -582,8 +582,10 @@
     </div>
     <div class="flex flex-col mt-0.5 lg:hidden">
         <div
-            class="dark:bg-zinc-700 bg-zinc-200 !bg-opacity-[0.35] rounded-lg text-4xl p-1.5 dark:text-white text-zinc-800 font-bold w-fit mx-auto {tutorialStage ===
-                4 && 'z-50'}"
+            class="dark:bg-zinc-700 rounded-lg text-4xl p-1.5 dark:text-white text-zinc-800 font-bold w-fit mx-auto {tutorialStage ===
+            4
+                ? 'z-50 bg-white'
+                : '!bg-opacity-[0.45] bg-zinc-200'}"
             aria-label="Change the total distance"
         >
             <input
@@ -597,7 +599,7 @@
         </div>
         <h2
             class="text-xl lg:text-2xl text-zinc-700 text-center dark:text-zinc-400 mt-1 {tutorialStage ===
-                5 && 'z-50'}"
+                5 && 'z-50 bg-white dark:bg-transparent'}"
         >
             <span class="font-medium">
                 {formatMillisecondsAsTimestamp(
