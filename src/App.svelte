@@ -11,6 +11,7 @@
     import FaUndoAlt from "svelte-icons/fa/FaUndoAlt.svelte";
     import FaRedoAlt from "svelte-icons/fa/FaRedoAlt.svelte";
     import FaFileExport from "svelte-icons/fa/FaFileExport.svelte";
+    import FaTimes from "svelte-icons/fa/FaTimes.svelte";
 
     import colors from "tailwindcss/colors";
     import "./global.css";
@@ -728,7 +729,8 @@
 
                 <button
                     on:click={copyURLToClipboard}
-                    class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-indigo-500 dark:hover:bg-indigo-700 transition-colors lg:hidden"
+                    class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-indigo-500 dark:hover:bg-indigo-700 transition-colors lg:hidden {tutorialStage ===
+                        7 && 'z-50'}"
                 >
                     <div class="w-5 h-5 lg:hidden">
                         <FaShareAlt />
@@ -893,28 +895,28 @@
     >
         {#if tutorialStage !== 0}
             {@const tutorialText = tutorialTexts[tutorialStage - 1]}
-            <h3 class="text-lg lg:text-xl font-bold mb-2 lg:mb-3">
-                {tutorialText.title}
-            </h3>
+            <div class="flex justify-between">
+                <h3 class="text-lg lg:text-xl font-bold mb-2 lg:mb-3">
+                    {tutorialText.title}
+                </h3>
+                <button
+                    class="w-5 h-5 dark:text-white text-zinc-600"
+                    on:click={() => {
+                        tutorialStage = 0;
+                    }}
+                >
+                    <FaTimes />
+                </button>
+            </div>
             <div
-                class="mb-3 text-zinc-600 dark:text-zinc-400 text-sm lg:text-base"
+                class="mb-2.5 lg:mb-4 text-zinc-600 dark:text-zinc-400 text-sm lg:text-base"
             >
                 {tutorialText.description}
             </div>
         {/if}
-        <div class="flex gap-1.5 justify-end">
-            <button
-                class="text-white bg-indigo-600 dark:bg-indigo-500 font-medium rounded-md text-sm py-2 px-3 lg:px-5 lg:py-2.5 transition-colors {tutorialStage ===
-                1
-                    ? 'opacity-40'
-                    : 'dark:hover:bg-indigo-700 hover:bg-indigo-700'}"
-                disabled={tutorialStage === 1}
-                on:click={() => {
-                    tutorialStage -= 1;
-                }}
-            >
-                Back
-            </button>
+        <div
+            class="flex gap-3 items-center text-sm text-zinc-600 dark:text-zinc-400"
+        >
             <button
                 on:click={() => {
                     tutorialStage += 1;
@@ -923,10 +925,13 @@
                         tutorialStage = 0;
                     }
                 }}
-                class="text-white bg-indigo-600 dark:bg-indigo-500 dark:hover:bg-indigo-700 hover:bg-indigo-700 font-medium rounded-md text-sm py-2 px-3 lg:px-5 lg:py-2.5 transition-colors"
+                class="text-white bg-indigo-600 dark:bg-indigo-500 dark:hover:bg-indigo-700 hover:bg-indigo-700 font-medium rounded-md py-2 px-3 lg:px-5 lg:py-2.5 transition-colors"
             >
                 Next
             </button>
+            <div>
+                {tutorialStage} of {tutorialTexts.length}
+            </div>
         </div>
     </div>
 </div>
