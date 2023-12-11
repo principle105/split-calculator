@@ -358,6 +358,8 @@
     };
 
     const handleSectionResize = (event) => {
+        if (tutorialStage !== 0) return;
+
         intervals = intervals.map((interval, i) => ({
             ...interval,
             size: event.detail[i].size,
