@@ -861,7 +861,7 @@
             <FaGithub />
         </div>
     </a>
-    <div class="flex items-center gap-1.5 lg:z-50">
+    <div class="flex items-center gap-1.5">
         <span class="hidden lg:inline">Confused?</span>
         <button
             aria-label="Start tooltip tutorial"
