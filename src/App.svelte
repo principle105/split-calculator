@@ -578,7 +578,11 @@
     id="loading"
 >
     <div class="lg:hidden">
-        <img src="./logo.png" alt="Split Calculator Logo" class="w-11 h-11" />
+        <img
+            src="./logo.png"
+            alt="Split Calculator Rowing Logo"
+            class="w-11 h-11"
+        />
     </div>
     <div class="flex flex-col mt-0.5 lg:hidden">
         <div
