@@ -375,7 +375,7 @@
         savePreviousState();
 
         for (let i = intervals.length - 1; i >= 0; i--) {
-            if (Math.round(intervals[i].size) > SMALLEST_INTERVAL_SIZE) {
+            if (Math.round(intervals[i].size) > SMALLEST_INTERVAL_SIZE * 2) {
                 intervals[i].size -= SMALLEST_INTERVAL_SIZE;
                 break;
             }
