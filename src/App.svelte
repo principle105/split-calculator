@@ -318,8 +318,6 @@
             toast.error(e.message);
         }
 
-        savePreviousState();
-
         intervals[index].rawInput = formatSplitAsTimestamp(intervals[index]);
     };
 
@@ -336,6 +334,8 @@
             return;
         }
 
+        savePreviousState();
+
         distance = parseInt(enteredDistance);
     };
 
@@ -351,8 +351,6 @@
                 `Distance must be less than ${MAX_DISTANCE.toLocaleString()} metres`
             );
         }
-
-        savePreviousState();
 
         distanceRawInput = distance.toString();
     };
@@ -529,10 +527,11 @@
     const undo = () => {
         if (undoStates.length > 0) {
             redoStates.push({ intervals, distance });
+            const undoState = undoStates.pop();
 
-            const previousState = undoStates.pop();
-            intervals = previousState.intervals;
-            distance = previousState.distance;
+            intervals = undoState.intervals;
+            distance = undoState.distance;
+            distanceRawInput = distance.toString();
 
             undoStates = undoStates;
             redoStates = redoStates;
@@ -542,10 +541,11 @@
     const redo = () => {
         if (redoStates.length > 0) {
             undoStates.push({ intervals, distance });
-
             const redoState = redoStates.pop();
+
             intervals = redoState.intervals;
             distance = redoState.distance;
+            distanceRawInput = distance.toString();
 
             undoStates = undoStates;
             redoStates = redoStates;
@@ -553,7 +553,19 @@
     };
 
     const savePreviousState = () => {
-        undoStates.push({ intervals, distance });
+        const newState: SaveState = {
+            intervals: JSON.parse(
+                JSON.stringify(
+                    intervals.map((interval, i) => ({
+                        ...interval,
+                        rawInput: formatSplitAsTimestamp(intervals[i]),
+                    }))
+                )
+            ),
+            distance,
+        };
+
+        undoStates.push(newState);
 
         if (undoStates.length > UNDO_LIMIT) {
             undoStates.shift();
