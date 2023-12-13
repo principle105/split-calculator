@@ -94,22 +94,22 @@
         {
             title: "Edit Section",
             description:
-                "Adjust the split of an interval by editing the input.",
+                "Adjust the split of a section by editing the input box.",
         },
         {
             title: "Edit Section",
             description:
-                "Add a new section by clicking the + button. Delete all sections by clicking the 🗑️ button. Use the undo or redo button to move between your edit history.",
+                "Add a new section by clicking the + button. Delete all sections by clicking the 🗑️ button. Use the undo and redo buttons to move between your edit history.",
         },
         {
             title: "Edit Distance",
             description:
-                "Change the your piece's distance by editing the distance input.",
+                "Change the your piece's distance by editing the distance input box.",
         },
         {
             title: "View Total Time",
             description:
-                "View the total time it would take to complete your piece.",
+                "View the total time it would take to complete your piece and your average split.",
         },
         {
             title: "Export Your Pieces",
