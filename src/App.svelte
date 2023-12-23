@@ -841,6 +841,7 @@
                     on:blur={handleDistanceBlur}
                     on:keypress={blurOnEnter}
                     class="bg-transparent outline-none absolute inset-0 w-full text-center"
+                    aria-label="Edit distance"
                     maxlength="6"
                 />
             </div>
@@ -859,6 +860,7 @@
                 <input
                     type="text"
                     class="bg-transparent outline-none absolute inset-0 w-full text-center"
+                    aria-label="Edit total time"
                     bind:value={totalTimeRawInput}
                     on:blur={handleTotalTimeBlur}
                     on:keypress={blurOnEnter}
@@ -876,6 +878,7 @@
                     <input
                         type="text"
                         class="bg-transparent outline-none absolute inset-0 w-full"
+                        aria-label="Edit average split"
                         bind:value={averageSplitRawInput}
                         on:blur={handleAverageSplitBlur}
                         on:keypress={blurOnEnter}
@@ -941,6 +944,7 @@
                         on:blur={handleDistanceBlur}
                         on:keypress={blurOnEnter}
                         class="bg-transparent outline-none absolute inset-0 w-full text-center"
+                        aria-label="Edit distance"
                         maxlength="6"
                     />
                 </div>
@@ -960,6 +964,7 @@
                 <input
                     type="text"
                     class="bg-transparent outline-none absolute inset-0 w-full text-center"
+                    aria-label="Edit total time"
                     bind:value={totalTimeRawInput}
                     on:blur={handleTotalTimeBlur}
                     on:input={handleTotalTimeInput}
@@ -978,6 +983,7 @@
                     <input
                         type="text"
                         class="bg-transparent outline-none absolute inset-0 w-full"
+                        aria-label="Edit average split"
                         bind:value={averageSplitRawInput}
                         on:blur={handleAverageSplitBlur}
                         on:input={handleAverageSplitInput}
@@ -1000,6 +1006,7 @@
             <button
                 on:click={addSection}
                 class="text-white bg-emerald-600 hover:bg-emerald-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-emerald-500 dark:hover:bg-emerald-700 transition-colors"
+                aria-label="Add section"
             >
                 <div class="h-5 w-5">
                     <FaPlus />
@@ -1009,6 +1016,7 @@
             <button
                 on:click={resetIntervals}
                 class="text-white bg-red-600 hover:bg-red-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-red-500 dark:hover:bg-red-700 transition-colors"
+                aria-label="Remove all sections"
             >
                 <div class="w-5 h-5">
                     <FaTrashAlt />
@@ -1022,6 +1030,7 @@
                     on:click={downloadSplitsAsImage}
                     class="text-white bg-rose-500 hover:bg-rose-600 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 transition-colors {tutorialStage ===
                         6 && 'z-50'}"
+                    aria-label="Export as image"
                 >
                     <div class="w-5 h-5 lg:hidden">
                         <FaFileExport />
@@ -1051,6 +1060,7 @@
                     on:click={copyURLToClipboard}
                     class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-colors lg:hidden {tutorialStage ===
                         7 && 'z-50'}"
+                    aria-label="Copy share URL"
                 >
                     <div class="w-5 h-5 lg:hidden">
                         <FaShareAlt />
@@ -1070,6 +1080,7 @@
                     ? 'dark:opacity-20 opacity-50 !cursor-not-allowed'
                     : 'hover:bg-zinc-700 dark:hover:bg-zinc-600'}"
                 disabled={undoStates.length === 0}
+                aria-label="Undo last edit"
             >
                 <div class="w-5 h-5">
                     <FaUndoAlt />
@@ -1082,6 +1093,7 @@
                     ? 'dark:opacity-20 opacity-50 !cursor-not-allowed'
                     : 'dark:hover:bg-zinc-600 hover:bg-zinc-700'}"
                 disabled={redoStates.length === 0}
+                aria-label="Redo last edit"
             >
                 <div class="w-5 h-5">
                     <FaRedoAlt />
@@ -1124,7 +1136,7 @@
 
                             <input
                                 type="text"
-                                aria-label="Split time"
+                                aria-label="Edit section split"
                                 bind:value={interval.rawInput}
                                 on:input={(e) => handleSplitInput(e, i)}
                                 on:blur={() => handleSplitBlur(i)}
@@ -1176,6 +1188,7 @@
         href="https://github.com/principle105/split-calculator"
         target="_blank"
         rel="noreferrer"
+        aria-label="Github repository"
     >
         <div class="w-6 h-6">
             <FaGithub />
@@ -1221,6 +1234,7 @@
                 </h3>
                 <button
                     class="w-5 h-5 dark:text-white text-zinc-600"
+                    aria-label="Close tutorial"
                     on:click={() => {
                         tutorialStage = 0;
                     }}
