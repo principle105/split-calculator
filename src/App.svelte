@@ -644,14 +644,23 @@
     };
 
     const createShareURL = () => {
-        const encodedIntervals = LZString.compressToEncodedURIComponent(
-            JSON.stringify({
-                intervals,
-                distance,
+        const compressedIntervals = intervals
+            .map((interval) => {
+                const totalMilliseconds = addTimeAndConvertToMilliseconds(
+                    0,
+                    interval.minutes,
+                    interval.seconds,
+                    interval.milliseconds
+                );
+                return `${interval.size},${totalMilliseconds / 10000}`;
             })
+            .join(",");
+
+        const shareCode = LZString.compressToEncodedURIComponent(
+            `${compressedIntervals},${distance}`
         );
 
-        return encodedIntervals;
+        return shareCode;
     };
 
     const loadShareURL = () => {
@@ -662,12 +671,39 @@
             window.history.replaceState(null, "", "/");
 
             try {
-                const decodedIntervals = JSON.parse(
-                    LZString.decompressFromEncodedURIComponent(encodedIntervals)
-                );
+                const decodedData =
+                    LZString.decompressFromEncodedURIComponent(
+                        encodedIntervals
+                    );
+                const rawData = decodedData.split(",");
+                const newIntervals: Interval[] = [];
 
-                intervals = decodedIntervals.intervals;
-                distance = decodedIntervals.distance;
+                for (let i = 0; i < rawData.length - 1; i += 2) {
+                    if (rawData[i] === "") {
+                        break;
+                    }
+
+                    const intervalSize = parseInt(rawData[i]);
+                    const totalMilliseconds =
+                        parseFloat(rawData[i + 1]) * 10000;
+
+                    const [_, minutes, seconds, milliseconds] =
+                        convertMilliseconds(totalMilliseconds);
+
+                    const interval: Interval = {
+                        size: intervalSize,
+                        minutes,
+                        seconds,
+                        milliseconds,
+                        rawInput: "",
+                    };
+                    interval.rawInput = formatSplitAsTimestamp(interval);
+
+                    newIntervals.push(interval);
+                }
+
+                intervals = newIntervals;
+                distance = parseInt(rawData[rawData.length - 1]);
                 distanceRawInput = distance.toString();
             } catch (e) {
                 toast.error("Failed to load splits from URL");
