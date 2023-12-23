@@ -88,12 +88,12 @@
         {
             title: "Edit Distance",
             description:
-                "Change the your piece's distance by editing the distance input box.",
+                "Change your piece's distance by editing the distance input box.",
         },
         {
             title: "Total Time",
             description:
-                "View how long it would take to complete your piece. Edit it to scale the splits on your sections.",
+                "View how long it takes to complete your piece. Edit it to scale the splits on your sections.",
         },
         {
             title: "Average Split",
@@ -187,16 +187,13 @@
             const intervalStorage = localStorage.getItem("intervals");
             const distanceStorage = localStorage.getItem("distance");
 
+            distance = distanceStorage ? parseInt(distanceStorage) : 2000;
+            distanceRawInput = distance.toString();
+
             intervals = intervalStorage
                 ? JSON.parse(intervalStorage)
                 : [DEFAULT_INTERVAL];
-
-            distance = distanceStorage ? parseInt(distanceStorage) : 2000;
-            distanceRawInput = distance.toString();
         }
-
-        averageSplit = intervals ? calculateTotalTime() : 0;
-        totalTime = (averageSplit / 500) * distance;
 
         averageSplitRawInput = formatMillisecondsAsTimestamp(averageSplit);
         totalTimeRawInput = formatMillisecondsAsTimestamp(totalTime);
@@ -676,22 +673,17 @@
                         encodedIntervals
                     );
                 const rawData = decodedData.split(",");
-                const newIntervals: Interval[] = [];
+
+                let newIntervals: Interval[] = [];
 
                 for (let i = 0; i < rawData.length - 1; i += 2) {
-                    if (rawData[i] === "") {
-                        break;
-                    }
-
-                    const intervalSize = parseInt(rawData[i]);
-                    const totalMilliseconds =
-                        parseFloat(rawData[i + 1]) * 10000;
+                    if (rawData[i] === "") break;
 
                     const [_, minutes, seconds, milliseconds] =
-                        convertMilliseconds(totalMilliseconds);
+                        convertMilliseconds(parseFloat(rawData[i + 1]) * 10000);
 
-                    const interval: Interval = {
-                        size: intervalSize,
+                    let interval: Interval = {
+                        size: parseInt(rawData[i]),
                         minutes,
                         seconds,
                         milliseconds,
@@ -702,9 +694,9 @@
                     newIntervals.push(interval);
                 }
 
-                intervals = newIntervals;
                 distance = parseInt(rawData[rawData.length - 1]);
                 distanceRawInput = distance.toString();
+                intervals = newIntervals;
             } catch (e) {
                 toast.error("Failed to load splits from URL");
                 return false;
