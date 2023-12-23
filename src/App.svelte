@@ -218,17 +218,20 @@
     };
 
     const formatMillisecondsAsTimestamp = (milliseconds: number): string => {
-        const date = new Date(milliseconds).toISOString();
+        const [hours, minutes, seconds, remainingMilliseconds] =
+            convertMilliseconds(milliseconds);
+        const millisecondsDecimal = Math.floor(remainingMilliseconds / 100);
 
-        if (milliseconds < 1) {
-            return "0:00.0";
-        }
+        const hoursPart = hours > 0 ? `${hours}:` : "";
 
-        if (milliseconds < 3600 * 1000) {
-            return date.substring(14, 21).replace(/^0+(?!:)/, "");
-        }
+        const minutesPart =
+            hours > 0 || minutes > 9
+                ? `${minutes}`.padStart(2, "0") + ":"
+                : `${minutes}:`;
+        const secondsPart = `${seconds}`.padStart(2, "0");
+        const millisecondsPart = `.${millisecondsDecimal}`;
 
-        return date.substring(11, 21).replace(/^0+/, "");
+        return hoursPart + minutesPart + secondsPart + millisecondsPart;
     };
 
     const convertMilliseconds = (milliseconds: number) => {
@@ -363,28 +366,17 @@
             isNaN(minutes) ||
             isNaN(milliseconds)
         ) {
-            throw new Error("Invalid time, please input in the format 0:00.0");
-        }
-
-        const maxMilliseconds =
-            (distance / 500) * addTimeAndConvertToMilliseconds(0, 9, 59, 999);
-        const maxTimeDisplay = formatMillisecondsAsTimestamp(maxMilliseconds);
-
-        const totalMilliseconds = addTimeAndConvertToMilliseconds(
-            hours,
-            minutes,
-            seconds,
-            milliseconds
-        );
-
-        // Checking if the average split would be above 9:59.9
-        if (totalMilliseconds > maxMilliseconds) {
             throw new Error(
-                `Set the total time below ${maxTimeDisplay} so the average split is below 9:59.9.`
+                "Invalid time, please input in the format 00:00:00.0"
             );
         }
 
-        if (minutes === 0 && seconds === 0 && milliseconds == 0) {
+        if (
+            hours === 0 &&
+            minutes === 0 &&
+            seconds === 0 &&
+            milliseconds == 0
+        ) {
             throw new Error("Time must be at least 1 millisecond");
         }
 
@@ -398,6 +390,35 @@
 
         if (minutes < 0 || minutes >= 60) {
             throw new Error("Minutes must be between 0 and 59");
+        }
+
+        const maxMilliseconds =
+            (distance / 500) * addTimeAndConvertToMilliseconds(0, 9, 59, 900);
+        const maxTimeDisplay = formatMillisecondsAsTimestamp(maxMilliseconds);
+
+        const minMilliseconds =
+            (distance / 500) * addTimeAndConvertToMilliseconds(0, 0, 0, 100);
+        const minTimeDisplay = formatMillisecondsAsTimestamp(minMilliseconds);
+
+        const totalMilliseconds = addTimeAndConvertToMilliseconds(
+            hours,
+            minutes,
+            seconds,
+            milliseconds
+        );
+
+        // Checking if the average split would be above 9:59.9
+        if (totalMilliseconds > maxMilliseconds) {
+            throw new Error(
+                `Total time is too large! Set it between ${maxTimeDisplay} and ${minTimeDisplay}.`
+            );
+        }
+
+        // Checking if the average split would be above 0:00.1
+        if (totalMilliseconds < minMilliseconds) {
+            throw new Error(
+                `Total time is too small! Set it between ${maxTimeDisplay} and ${minTimeDisplay}.`
+            );
         }
     };
 
@@ -563,7 +584,8 @@
     };
 
     const handleAverageSplitBlur = () => {
-        const [minutes, seconds, milliseconds] = parseTime(totalTimeRawInput);
+        const [minutes, seconds, milliseconds] =
+            parseTime(averageSplitRawInput);
 
         try {
             validateSplitTimestamp(minutes, seconds, milliseconds);
