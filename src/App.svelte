@@ -190,6 +190,9 @@
             distanceRawInput = distance.toString();
         }
 
+        averageSplit = intervals ? calculateTotalTime() : 0;
+        totalTime = (averageSplit / 500) * distance;
+
         averageSplitRawInput = formatMillisecondsAsTimestamp(averageSplit);
         totalTimeRawInput = formatMillisecondsAsTimestamp(totalTime);
 
@@ -432,9 +435,12 @@
 
         savePreviousState();
 
-        intervals[index].seconds = seconds;
-        intervals[index].minutes = minutes;
-        intervals[index].milliseconds = milliseconds;
+        intervals[index] = {
+            ...intervals[index],
+            seconds,
+            minutes,
+            milliseconds,
+        };
     };
 
     const handleSplitBlur = (index: number) => {
