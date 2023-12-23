@@ -69,22 +69,6 @@
             rawInput: "1:45",
         },
     ];
-    const UNDO_LIMIT = 100;
-
-    let distance: number = 2000;
-    let distanceRawInput: string = distance.toString();
-
-    let intervals: Interval[] = [DEFAULT_INTERVAL];
-
-    let isLoaded: boolean = false;
-    let isDarkMode: boolean = false;
-    let isVertical: boolean = window.innerWidth < 1024;
-
-    let undoStates: SaveState[] = [];
-    let redoStates: SaveState[] = [];
-
-    $: intervalDisplay = tutorialStage === 0 ? intervals : TUTORIAL_INTERVALS;
-
     const tutorialTexts: TutorialText[] = [
         {
             title: "View Your Sections",
@@ -121,18 +105,58 @@
             description: "Share your piece with your friends or coaches.",
         },
     ];
+    const UNDO_LIMIT = 100;
+
+    let distance: number = 2000;
+    let distanceRawInput: string = distance.toString();
+
+    let intervals: Interval[] = [DEFAULT_INTERVAL];
+
+    let isLoaded: boolean = false;
+    let isDarkMode: boolean = false;
+    let isVertical: boolean = window.innerWidth < 1024;
 
     let tutorialStage: number = 0;
 
+    let undoStates: SaveState[] = [];
+    let redoStates: SaveState[] = [];
+
+    let averageSplit: number = 0;
+    let totalTime: number = 0;
+
     let splitPaneElement: HTMLElement;
+
+    let averageSplitRawInput: string = "";
+    let totalTimeRawInput: string = "";
 
     $: intervals, updateIntervalsInStorage();
     $: distance, updateDistanceInStorage();
+    $: isDarkMode, updateTheme();
+
+    $: intervalDisplay = tutorialStage === 0 ? intervals : TUTORIAL_INTERVALS;
 
     $: minInc = Math.pow(10, Math.floor(Math.log10(distance))) / 100;
-    $: averageTime = intervals ? calculateAverageTime() : 0;
 
-    $: isDarkMode, updateTheme();
+    $: (intervals, distance), updateAverageSplitAndTotalTime();
+
+    const updateAverageSplitAndTotalTime = () => {
+        const wasTotalTimeRawInputUpdated =
+            totalTimeRawInput === formatMillisecondsAsTimestamp(totalTime);
+        const wasAverageSplitRawInputUpdated =
+            averageSplitRawInput !==
+            formatMillisecondsAsTimestamp(averageSplit);
+
+        averageSplit = intervals ? calculateTotalTime() : 0;
+        totalTime = (averageSplit / 500) * distance;
+
+        if (wasTotalTimeRawInputUpdated) {
+            totalTimeRawInput = formatMillisecondsAsTimestamp(totalTime);
+        }
+
+        if (wasAverageSplitRawInputUpdated) {
+            averageSplitRawInput = formatMillisecondsAsTimestamp(averageSplit);
+        }
+    };
 
     const updateDistanceInStorage = () => {
         if (!isLoaded) return;
@@ -166,6 +190,9 @@
             distanceRawInput = distance.toString();
         }
 
+        averageSplitRawInput = formatMillisecondsAsTimestamp(averageSplit);
+        totalTimeRawInput = formatMillisecondsAsTimestamp(totalTime);
+
         isLoaded = true;
     });
 
@@ -196,7 +223,29 @@
         return date.substring(11, 21).replace(/^0+/, "");
     };
 
-    const calculateAverageTime = (): number => {
+    const convertMilliseconds = (milliseconds: number) => {
+        milliseconds = Math.abs(milliseconds);
+
+        const hours = Math.floor(milliseconds / (1000 * 60 * 60));
+        const minutes = Math.floor(
+            (milliseconds % (1000 * 60 * 60)) / (1000 * 60)
+        );
+        const seconds = Math.floor((milliseconds % (1000 * 60)) / 1000);
+        const remainingMilliseconds = milliseconds % 1000;
+
+        return [hours, minutes, seconds, remainingMilliseconds];
+    };
+
+    const addTimeAndConvertToMilliseconds = (
+        hours: number,
+        minutes: number,
+        seconds: number,
+        milliseconds: number
+    ) => {
+        return (hours * 60 * 60 + minutes * 60 + seconds) * 1000 + milliseconds;
+    };
+
+    const calculateTotalTime = (): number => {
         let total = 0;
         let totalDistance = 0;
 
@@ -235,6 +284,32 @@
         return timestamp;
     };
 
+    const parseTimeWithHours = (time: string) => {
+        const colonSplitParts = time.split(":");
+        let hours = 0;
+        let minutes = 0;
+        let seconds = 0;
+        let milliseconds = 0;
+
+        if (colonSplitParts.length > 2) {
+            hours = parseInt(colonSplitParts[0]) || 0;
+            minutes = parseInt(colonSplitParts[1]) || 0;
+        } else if (colonSplitParts.length > 1) {
+            minutes = parseInt(colonSplitParts[0]) || 0;
+        }
+
+        const decimalSplitParts =
+            colonSplitParts[colonSplitParts.length - 1].split(".");
+
+        seconds = parseInt(decimalSplitParts[0]) || 0;
+
+        if (decimalSplitParts.length > 1 && decimalSplitParts[1] !== "") {
+            milliseconds = parseInt(decimalSplitParts[1]) * 100;
+        }
+
+        return [hours, minutes, seconds, milliseconds];
+    };
+
     const parseTime = (time: string) => {
         const colonSplitParts = time.split(":");
         let minutes = parseInt(colonSplitParts[0]);
@@ -252,8 +327,9 @@
             }
         }
 
-        return [seconds, minutes, milliseconds];
+        return [minutes, seconds, milliseconds];
     };
+
     const getDistance = (size: number) => {
         return Math.round(
             Math.round((size / (100 * minInc)) * distance) * minInc
@@ -267,35 +343,89 @@
         intervals = intervals;
     };
 
-    const validateTime = (
-        seconds: number,
+    const validateTotalTimeTimestamp = (
+        hours: number,
         minutes: number,
+        seconds: number,
+        milliseconds: number
+    ) => {
+        if (
+            isNaN(hours) ||
+            isNaN(seconds) ||
+            isNaN(minutes) ||
+            isNaN(milliseconds)
+        ) {
+            throw new Error("Invalid time, please input in the format 0:00.0");
+        }
+
+        const maxMilliseconds =
+            (distance / 500) * addTimeAndConvertToMilliseconds(0, 9, 59, 999);
+        const maxTimeDisplay = formatMillisecondsAsTimestamp(maxMilliseconds);
+
+        const totalMilliseconds = addTimeAndConvertToMilliseconds(
+            hours,
+            minutes,
+            seconds,
+            milliseconds
+        );
+
+        // Checking if the average split would be above 9:59.9
+        if (totalMilliseconds > maxMilliseconds) {
+            throw new Error(
+                `Set the total time below ${maxTimeDisplay} so the average split is below 9:59.9.`
+            );
+        }
+
+        if (minutes === 0 && seconds === 0 && milliseconds == 0) {
+            throw new Error("Time must be at least 1 millisecond");
+        }
+
+        if (milliseconds < 0 || milliseconds > 1000) {
+            throw new Error("Milliseconds must only take up one decimal place");
+        }
+
+        if (seconds < 0 || seconds >= 60) {
+            throw new Error("Seconds must be between 0 and 59");
+        }
+
+        if (minutes < 0 || minutes >= 60) {
+            throw new Error("Minutes must be between 0 and 59");
+        }
+    };
+
+    const validateSplitTimestamp = (
+        minutes: number,
+        seconds: number,
         milliseconds: number
     ) => {
         if (isNaN(seconds) || isNaN(minutes) || isNaN(milliseconds)) {
             throw new Error("Invalid split, please input in the format 0:00.0");
         }
 
-        if (milliseconds < 0 || milliseconds > 1000) {
-            throw new Error("Milliseconds must take one decimal place");
+        if (minutes === 0 && seconds === 0 && milliseconds == 0) {
+            throw new Error("Split must be at least 0:00.1");
         }
 
-        if (minutes < 0 || minutes >= 10) {
-            throw new Error("Minutes must be between 0 and 9");
+        if (milliseconds < 0 || milliseconds > 1000) {
+            throw new Error("Milliseconds must only take up one decimal place");
         }
 
         if (seconds < 0 || seconds >= 60) {
             throw new Error("Seconds must be between 0 and 59");
+        }
+
+        if (minutes < 0 || minutes >= 10) {
+            throw new Error("Minutes must be between 0 and 9");
         }
     };
 
     const handleSplitInput = (event, index: number) => {
         let enteredTime = event.target.value;
 
-        const [seconds, minutes, milliseconds] = parseTime(enteredTime);
+        const [minutes, seconds, milliseconds] = parseTime(enteredTime);
 
         try {
-            validateTime(seconds, minutes, milliseconds);
+            validateSplitTimestamp(minutes, seconds, milliseconds);
         } catch (e) {
             return;
         }
@@ -308,12 +438,12 @@
     };
 
     const handleSplitBlur = (index: number) => {
-        const [seconds, minutes, milliseconds] = parseTime(
+        const [minutes, seconds, milliseconds] = parseTime(
             intervals[index].rawInput
         );
 
         try {
-            validateTime(seconds, minutes, milliseconds);
+            validateSplitTimestamp(minutes, seconds, milliseconds);
         } catch (e) {
             toast.error(e.message);
         }
@@ -337,6 +467,100 @@
         savePreviousState();
 
         distance = parseInt(enteredDistance);
+    };
+
+    const handleTotalTimeBlur = () => {
+        const [hours, minutes, seconds, milliseconds] =
+            parseTimeWithHours(totalTimeRawInput);
+
+        try {
+            validateTotalTimeTimestamp(hours, minutes, seconds, milliseconds);
+        } catch (e) {
+            toast.error(e.message);
+        }
+
+        totalTimeRawInput = formatMillisecondsAsTimestamp(totalTime);
+    };
+
+    const handleTotalTimeInput = (event) => {
+        let enteredTime = event.target.value;
+
+        const [hours, minutes, seconds, milliseconds] =
+            parseTimeWithHours(enteredTime);
+
+        try {
+            validateTotalTimeTimestamp(hours, minutes, seconds, milliseconds);
+        } catch (e) {
+            return;
+        }
+
+        savePreviousState();
+
+        const totalTimeChangeFactor =
+            addTimeAndConvertToMilliseconds(
+                hours,
+                minutes,
+                seconds,
+                milliseconds
+            ) / totalTime;
+
+        scaleIntervals(totalTimeChangeFactor);
+    };
+
+    const handleAverageSplitInput = (event) => {
+        let enteredTime = event.target.value;
+
+        const [minutes, seconds, milliseconds] = parseTime(enteredTime);
+
+        try {
+            validateSplitTimestamp(minutes, seconds, milliseconds);
+        } catch (e) {
+            return;
+        }
+
+        savePreviousState();
+
+        const averageSplitChangeFactor =
+            addTimeAndConvertToMilliseconds(0, minutes, seconds, milliseconds) /
+            averageSplit;
+
+        scaleIntervals(averageSplitChangeFactor);
+    };
+
+    const scaleIntervals = (scaleFactor: number) => {
+        intervals = intervals.map((interval) => {
+            const totalIntervalTime = addTimeAndConvertToMilliseconds(
+                0,
+                interval.minutes,
+                interval.seconds,
+                interval.milliseconds
+            );
+
+            const newIntervalTime = totalIntervalTime * scaleFactor;
+
+            const [_, minutes, seconds, remainingMilliseconds] =
+                convertMilliseconds(newIntervalTime);
+
+            return {
+                ...interval,
+                minutes,
+                seconds,
+                milliseconds: remainingMilliseconds,
+                rawInput: formatMillisecondsAsTimestamp(newIntervalTime),
+            };
+        });
+    };
+
+    const handleAverageSplitBlur = () => {
+        const [minutes, seconds, milliseconds] = parseTime(totalTimeRawInput);
+
+        try {
+            validateSplitTimestamp(minutes, seconds, milliseconds);
+        } catch (e) {
+            toast.error(e.message);
+        }
+
+        averageSplitRawInput = formatMillisecondsAsTimestamp(averageSplit);
     };
 
     const handleDistanceBlur = () => {
@@ -598,31 +822,68 @@
     </div>
     <div class="flex flex-col mt-0.5 lg:hidden">
         <div
-            class="dark:bg-zinc-700 rounded-lg text-4xl p-1.5 dark:text-white text-zinc-800 font-bold w-fit mx-auto {tutorialStage ===
+            class="flex dark:bg-zinc-800 rounded-lg text-4xl p-1.5 dark:text-white text-zinc-800 font-bold mx-auto transition-colors {tutorialStage ===
             4
                 ? 'z-50 bg-white'
-                : '!bg-opacity-[0.45] bg-zinc-200'}"
-            aria-label="Change the total distance"
+                : 'bg-zinc-300/30 dark:focus-within:bg-zinc-700 focus-within:bg-zinc-600 focus-within:text-white'}"
         >
-            <input
-                bind:value={distanceRawInput}
-                on:input={handleDistanceInput}
-                on:blur={handleDistanceBlur}
-                on:keypress={blurOnEnter}
-                style="width: {distanceRawInput.toString().length}ch"
-                class="bg-transparent outline-none w-7"
-            />m
+            <span>(</span>
+            <div
+                class="relative min-w-[1em] w-min"
+                aria-label="Change the total distance"
+            >
+                <span class="invisible whitespace-pre text-center">
+                    {distanceRawInput}
+                </span>
+                <input
+                    bind:value={distanceRawInput}
+                    on:input={handleDistanceInput}
+                    on:blur={handleDistanceBlur}
+                    on:keypress={blurOnEnter}
+                    class="bg-transparent outline-none absolute inset-0 w-full text-center"
+                    maxlength="6"
+                />
+            </div>
+            <span>m)</span>
         </div>
         <h2
-            class="text-xl lg:text-2xl text-zinc-700 text-center dark:text-zinc-400 mt-1 {tutorialStage ===
+            class="flex justify-center text-xl lg:text-2xl text-zinc-700 text-center dark:text-zinc-400 mt-1 {tutorialStage ===
                 5 && 'z-50 bg-white dark:bg-transparent'}"
         >
-            <span class="font-medium">
-                {formatMillisecondsAsTimestamp(
-                    (averageTime / 500) * distance
-                )}</span
+            <div
+                class="relative min-w-[1em] w-min font-medium px-1.5 py-0.5 rounded-md transition-colors focus-within:bg-zinc-600 focus-within:text-white"
             >
-            <span>({formatMillisecondsAsTimestamp(averageTime)})</span>
+                <span class="invisible whitespace-pre text-center">
+                    {totalTimeRawInput}
+                </span>
+                <input
+                    type="text"
+                    class="bg-transparent outline-none absolute inset-0 w-full text-center"
+                    bind:value={totalTimeRawInput}
+                    on:blur={handleTotalTimeBlur}
+                    on:keypress={blurOnEnter}
+                    maxlength="20"
+                />
+            </div>
+            <div
+                class="flex px-1 py-0.5 rounded-md w-min transition-colors focus-within:bg-zinc-600 focus-within:text-white"
+            >
+                <span>(</span>
+                <div class="relative min-w-[1em]">
+                    <span class="invisible whitespace-pre">
+                        {averageSplitRawInput}
+                    </span>
+                    <input
+                        type="text"
+                        class="bg-transparent outline-none absolute inset-0 w-full"
+                        bind:value={averageSplitRawInput}
+                        on:blur={handleAverageSplitBlur}
+                        on:keypress={blurOnEnter}
+                        maxlength="20"
+                    />
+                </div>
+                <span>)</span>
+            </div>
         </h2>
     </div>
     <button on:click={toggleTheme} aria-label="Change theme">
@@ -657,36 +918,75 @@
 >
     <div class="hidden lg:block {tutorialStage === 5 && 'z-50'}">
         <h1
-            class="text-4xl lg:text-5xl text-zinc-800 font-bold mb-1 dark:text-white flex gap-1 md:gap-2.5 md:flex-row flex-col items-center justify-center"
+            class="text-4xl lg:text-5xl text-zinc-800 font-bold mb-[0.325rem] dark:text-white flex gap-1 md:gap-2.5 md:flex-row flex-col items-center justify-center"
         >
             <div>Split Calculator</div>
             <div
-                class="rounded-lg p-1.5 dark:bg-zinc-700 {tutorialStage === 4 ||
-                tutorialStage === 5
+                class="flex items-center rounded-lg px-2 py-3 dark:bg-zinc-700/[0.45] transition-colors {tutorialStage ===
+                    4 || tutorialStage === 5
                     ? 'z-50 bg-white'
-                    : '!bg-opacity-[0.45] bg-zinc-200'}"
-                aria-label="Change the total distance"
+                    : 'bg-zinc-300/30 dark:focus-within:bg-zinc-700 focus-within:bg-zinc-600 focus-within:text-white'}"
             >
-                (<input
-                    bind:value={distanceRawInput}
-                    on:input={handleDistanceInput}
-                    on:blur={handleDistanceBlur}
-                    on:keypress={blurOnEnter}
-                    style="width: {distanceRawInput.toString().length}ch"
-                    class="bg-transparent outline-none w-7"
-                />m)
+                <span>(</span>
+                <div
+                    class="relative min-w-[1em] w-min"
+                    aria-label="Change the total distance"
+                >
+                    <span class="invisible whitespace-pre text-center">
+                        {distanceRawInput}
+                    </span>
+                    <input
+                        bind:value={distanceRawInput}
+                        on:input={handleDistanceInput}
+                        on:blur={handleDistanceBlur}
+                        on:keypress={blurOnEnter}
+                        class="bg-transparent outline-none absolute inset-0 w-full text-center"
+                        maxlength="6"
+                    />
+                </div>
+                <span>m)</span>
             </div>
         </h1>
 
         <h2
-            class="text-xl lg:text-2xl text-zinc-700 text-center dark:text-zinc-400"
+            class="text-xl lg:text-2xl text-zinc-700 text-center dark:text-zinc-400 flex justify-center"
         >
-            <span class="font-medium">
-                {formatMillisecondsAsTimestamp(
-                    (averageTime / 500) * distance
-                )}</span
+            <div
+                class="relative min-w-[1em] w-min font-medium px-1.5 py-0.5 rounded-md transition-colors focus-within:bg-zinc-600 focus-within:text-white"
             >
-            <span>({formatMillisecondsAsTimestamp(averageTime)})</span>
+                <span class="invisible whitespace-pre text-center">
+                    {totalTimeRawInput}
+                </span>
+                <input
+                    type="text"
+                    class="bg-transparent outline-none absolute inset-0 w-full text-center"
+                    bind:value={totalTimeRawInput}
+                    on:blur={handleTotalTimeBlur}
+                    on:input={handleTotalTimeInput}
+                    on:keypress={blurOnEnter}
+                    maxlength="20"
+                />
+            </div>
+            <div
+                class="flex px-1 py-0.5 rounded-md transition-colors focus-within:bg-zinc-600 focus-within:text-white"
+            >
+                <span>(</span>
+                <div class="relative min-w-[1em] w-min grow">
+                    <span class="invisible whitespace-pre">
+                        {averageSplitRawInput}
+                    </span>
+                    <input
+                        type="text"
+                        class="bg-transparent outline-none absolute inset-0 w-full"
+                        bind:value={averageSplitRawInput}
+                        on:blur={handleAverageSplitBlur}
+                        on:input={handleAverageSplitInput}
+                        on:keypress={blurOnEnter}
+                        maxlength="20"
+                    />
+                </div>
+                <span>)</span>
+            </div>
         </h2>
     </div>
 
@@ -735,13 +1035,13 @@
                     <div class="pl-2 pr-1 dark:text-white relative">
                         <span>{window.location.origin}/?i=N4lg</span>
                         <div
-                            class="absolute bg-white dark:bg-zinc-800 h-full w-1 bottom-0 right-1 transition-colors"
+                            class="absolute bg-white dark:bg-zinc-800 h-full w-1 bottom-0 right-1"
                         />
                     </div>
 
                     <button
                         on:click={copyURLToClipboard}
-                        class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium px-3.5 py-[0.575rem] dark:bg-indigo-500 dark:hover:bg-indigo-700 transition-colors"
+                        class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium px-3.5 py-[0.575rem] dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-colors"
                     >
                         Copy Share Link
                     </button>
@@ -749,7 +1049,7 @@
 
                 <button
                     on:click={copyURLToClipboard}
-                    class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-indigo-500 dark:hover:bg-indigo-700 transition-colors lg:hidden {tutorialStage ===
+                    class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-colors lg:hidden {tutorialStage ===
                         7 && 'z-50'}"
                 >
                     <div class="w-5 h-5 lg:hidden">
@@ -767,7 +1067,7 @@
                 on:click={undo}
                 class="text-white bg-zinc-600 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-zinc-500 transition-colors {undoStates.length ===
                 0
-                    ? 'dark:opacity-20 opacity-70 !cursor-not-allowed'
+                    ? 'dark:opacity-20 opacity-50 !cursor-not-allowed'
                     : 'hover:bg-zinc-700 dark:hover:bg-zinc-600'}"
                 disabled={undoStates.length === 0}
             >
@@ -779,7 +1079,7 @@
                 on:click={redo}
                 class="text-white bg-zinc-600 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-zinc-500 transition-colors {redoStates.length ===
                 0
-                    ? 'dark:opacity-20 opacity-70 !cursor-not-allowed'
+                    ? 'dark:opacity-20 opacity-50 !cursor-not-allowed'
                     : 'dark:hover:bg-zinc-600 hover:bg-zinc-700'}"
                 disabled={redoStates.length === 0}
             >
@@ -796,7 +1096,7 @@
             1 && 'z-50 bg-white dark:bg-transparent'}"
     >
         <p
-            class="py-[3.575rem] bg-zinc-200/30  text-zinc-800 font-medium dark:!bg-zinc-700 dark:!text-white h-full flex justify-center items-center"
+            class="py-[3.575rem] bg-zinc-300/30  text-zinc-800 font-medium dark:!bg-zinc-700 dark:!text-white h-full flex justify-center items-center"
         >
             {#if intervals.length == 0}
                 You don't have any sections
@@ -830,12 +1130,12 @@
                                 on:blur={() => handleSplitBlur(i)}
                                 on:keypress={blurOnEnter}
                                 maxlength="6"
-                                class="outline-none w-full block max-w-[3.25rem] text-center rounded-md  dark:text-white my-1 py-0.5 lg:py-2 !leading-6 {interval
+                                class="outline-none w-full block max-w-[3.25rem] text-center rounded-md dark:text-white my-1 py-0.5 lg:py-2 !leading-6 {interval
                                     .rawInput.length > 4
                                     ? 'text-sm'
                                     : 'text-base'} {tutorialStage === 2
                                     ? 'z-50 dark:bg-zinc-500'
-                                    : 'dark:bg-zinc-600'}"
+                                    : 'dark:bg-zinc-600 dark:focus:bg-zinc-500 focus:bg-zinc-600 focus:text-white'} transition-colors"
                             />
                             <div>
                                 <button
@@ -945,7 +1245,7 @@
                         tutorialStage = 0;
                     }
                 }}
-                class="text-white bg-indigo-600 dark:bg-indigo-500 dark:hover:bg-indigo-700 hover:bg-indigo-700 font-medium rounded-md py-2 px-3 lg:px-5 lg:py-2.5 transition-colors"
+                class="text-white bg-indigo-600 dark:bg-indigo-500 dark:hover:bg-indigo-700 hover:bg-indigo-600 font-medium rounded-md py-2 px-3 lg:px-5 lg:py-2.5 transition-colors"
             >
                 Next
             </button>

@@ -7,6 +7,9 @@ module.exports = {
             colors: {
                 "zinc-850": "#1D1D20",
             },
+            fontFamily: {
+                sans: ['"Inter"', "sans-serif"],
+            },
         },
     },
     plugins: [],
