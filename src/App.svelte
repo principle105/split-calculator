@@ -91,9 +91,14 @@
                 "Change the your piece's distance by editing the distance input box.",
         },
         {
-            title: "View Total Time",
+            title: "Total Time",
             description:
-                "View the total time it would take to complete your piece and your average split.",
+                "View how long it would take to complete your piece. Edit it to scale the splits on your sections.",
+        },
+        {
+            title: "Average Split",
+            description:
+                "View the average split of your piece. Edit it to scale the splits of your sections.",
         },
         {
             title: "Export Your Pieces",
@@ -811,7 +816,7 @@
 <Toaster toastOptions={{ className: "toast" }} />
 
 <div
-    class="absolute backdrop-filter backdrop-blur-lg bg-zinc-600/50 dark:bg-transparent inset-0 z-40 transition-opacity duration-300 {tutorialStage ===
+    class="absolute backdrop-filter backdrop-blur-lg bg-zinc-500/40 dark:bg-transparent inset-0 z-40 transition-opacity duration-300 {tutorialStage ===
         0 && 'opacity-0 invisible'}"
 />
 
@@ -854,11 +859,11 @@
             <span>m)</span>
         </div>
         <h2
-            class="flex justify-center text-xl lg:text-2xl text-zinc-700 text-center dark:text-zinc-400 mt-1 {tutorialStage ===
-                5 && 'z-50 bg-white dark:bg-transparent'}"
+            class="flex justify-center text-xl lg:text-2xl text-zinc-700 text-center dark:text-zinc-400 mt-1"
         >
             <div
-                class="relative min-w-[1em] w-min font-medium px-1.5 py-0.5 rounded-md transition-colors focus-within:bg-zinc-600 focus-within:text-white"
+                class="relative min-w-[1em] w-min font-medium px-1.5 py-0.5 rounded-md transition-colors focus-within:bg-zinc-600 focus-within:text-white {tutorialStage ===
+                    5 && 'z-50 bg-white dark:bg-zinc-600 dark:text-white'}"
             >
                 <span class="invisible whitespace-pre text-center">
                     {totalTimeRawInput}
@@ -871,10 +876,12 @@
                     on:blur={handleTotalTimeBlur}
                     on:keypress={blurOnEnter}
                     maxlength="20"
+                    disabled={intervals.length === 0}
                 />
             </div>
             <div
-                class="flex px-1 py-0.5 rounded-md w-min transition-colors focus-within:bg-zinc-600 focus-within:text-white"
+                class="flex px-1 py-0.5 rounded-md w-min transition-colors focus-within:bg-zinc-600 focus-within:text-white {tutorialStage ===
+                    6 && 'z-50 bg-white dark:bg-zinc-600 dark:text-white'}"
             >
                 <span>(</span>
                 <div class="relative min-w-[1em]">
@@ -888,7 +895,8 @@
                         bind:value={averageSplitRawInput}
                         on:blur={handleAverageSplitBlur}
                         on:keypress={blurOnEnter}
-                        maxlength="20"
+                        maxlength="6"
+                        disabled={intervals.length === 0}
                     />
                 </div>
                 <span>)</span>
@@ -925,82 +933,84 @@
 <main
     class="m-auto w-full max-w-screen-xl px-4 grow flex lg:flex-col lg:justify-center gap-4 lg:gap-0"
 >
-    <div class="hidden lg:block {tutorialStage === 5 && 'z-50'}">
-        <h1
-            class="text-4xl lg:text-5xl text-zinc-800 font-bold mb-[0.325rem] dark:text-white flex gap-1 md:gap-2.5 md:flex-row flex-col items-center justify-center"
+    <h1
+        class="text-4xl lg:text-5xl text-zinc-800 font-bold mb-[0.325rem] dark:text-white gap-1 md:gap-2.5 md:flex-row flex-col items-center justify-center hidden lg:flex"
+    >
+        <div>Split Calculator</div>
+        <div
+            class="flex items-center rounded-lg px-2 py-3 dark:bg-zinc-700/[0.45] transition-colors {tutorialStage ===
+            4
+                ? 'z-50 bg-white'
+                : 'bg-zinc-300/30 dark:focus-within:bg-zinc-700 focus-within:bg-zinc-600 focus-within:text-white'}"
         >
-            <div>Split Calculator</div>
+            <span>(</span>
             <div
-                class="flex items-center rounded-lg px-2 py-3 dark:bg-zinc-700/[0.45] transition-colors {tutorialStage ===
-                    4 || tutorialStage === 5
-                    ? 'z-50 bg-white'
-                    : 'bg-zinc-300/30 dark:focus-within:bg-zinc-700 focus-within:bg-zinc-600 focus-within:text-white'}"
-            >
-                <span>(</span>
-                <div
-                    class="relative min-w-[1em] w-min"
-                    aria-label="Change the total distance"
-                >
-                    <span class="invisible whitespace-pre text-center">
-                        {distanceRawInput}
-                    </span>
-                    <input
-                        bind:value={distanceRawInput}
-                        on:input={handleDistanceInput}
-                        on:blur={handleDistanceBlur}
-                        on:keypress={blurOnEnter}
-                        class="bg-transparent outline-none absolute inset-0 w-full text-center"
-                        aria-label="Edit distance"
-                        maxlength="6"
-                    />
-                </div>
-                <span>m)</span>
-            </div>
-        </h1>
-
-        <h2
-            class="text-xl lg:text-2xl text-zinc-700 text-center dark:text-zinc-400 flex justify-center"
-        >
-            <div
-                class="relative min-w-[1em] w-min font-medium px-1.5 py-0.5 rounded-md transition-colors focus-within:bg-zinc-600 focus-within:text-white"
+                class="relative min-w-[1em] w-min"
+                aria-label="Change the total distance"
             >
                 <span class="invisible whitespace-pre text-center">
-                    {totalTimeRawInput}
+                    {distanceRawInput}
+                </span>
+                <input
+                    bind:value={distanceRawInput}
+                    on:input={handleDistanceInput}
+                    on:blur={handleDistanceBlur}
+                    on:keypress={blurOnEnter}
+                    class="bg-transparent outline-none absolute inset-0 w-full text-center"
+                    aria-label="Edit distance"
+                    maxlength="6"
+                />
+            </div>
+            <span>m)</span>
+        </div>
+    </h1>
+
+    <h2
+        class="hidden lg:flex text-xl lg:text-2xl text-zinc-700 text-center dark:text-zinc-400 justify-center"
+    >
+        <div
+            class="relative min-w-[1em] w-min font-medium px-1.5 py-0.5 rounded-md transition-colors focus-within:bg-zinc-600 focus-within:text-white {tutorialStage ===
+                5 && 'z-50 bg-white dark:bg-zinc-600 dark:text-white'}"
+        >
+            <span class="invisible whitespace-pre text-center">
+                {totalTimeRawInput}
+            </span>
+            <input
+                type="text"
+                class="bg-transparent outline-none absolute inset-0 w-full text-center"
+                aria-label="Edit total time"
+                bind:value={totalTimeRawInput}
+                on:blur={handleTotalTimeBlur}
+                on:input={handleTotalTimeInput}
+                on:keypress={blurOnEnter}
+                maxlength="20"
+                disabled={intervals.length === 0}
+            />
+        </div>
+        <div
+            class="flex px-1 py-0.5 rounded-md transition-colors focus-within:bg-zinc-600 focus-within:text-white {tutorialStage ===
+                6 && 'z-50 bg-white dark:bg-zinc-600 dark:text-white'}"
+        >
+            <span>(</span>
+            <div class="relative min-w-[1em] w-min grow">
+                <span class="invisible whitespace-pre">
+                    {averageSplitRawInput}
                 </span>
                 <input
                     type="text"
-                    class="bg-transparent outline-none absolute inset-0 w-full text-center"
-                    aria-label="Edit total time"
-                    bind:value={totalTimeRawInput}
-                    on:blur={handleTotalTimeBlur}
-                    on:input={handleTotalTimeInput}
+                    class="bg-transparent outline-none absolute inset-0 w-full"
+                    aria-label="Edit average split"
+                    bind:value={averageSplitRawInput}
+                    on:blur={handleAverageSplitBlur}
+                    on:input={handleAverageSplitInput}
                     on:keypress={blurOnEnter}
-                    maxlength="20"
+                    maxlength="6"
+                    disabled={intervals.length === 0}
                 />
             </div>
-            <div
-                class="flex px-1 py-0.5 rounded-md transition-colors focus-within:bg-zinc-600 focus-within:text-white"
-            >
-                <span>(</span>
-                <div class="relative min-w-[1em] w-min grow">
-                    <span class="invisible whitespace-pre">
-                        {averageSplitRawInput}
-                    </span>
-                    <input
-                        type="text"
-                        class="bg-transparent outline-none absolute inset-0 w-full"
-                        aria-label="Edit average split"
-                        bind:value={averageSplitRawInput}
-                        on:blur={handleAverageSplitBlur}
-                        on:input={handleAverageSplitInput}
-                        on:keypress={blurOnEnter}
-                        maxlength="20"
-                    />
-                </div>
-                <span>)</span>
-            </div>
-        </h2>
-    </div>
+            <span>)</span>
+        </div>
+    </h2>
 
     <div
         class="flex mb-2.5 lg:mt-12 lg:justify-between flex-col gap-2 lg:flex-row"
@@ -1035,7 +1045,7 @@
                 <button
                     on:click={downloadSplitsAsImage}
                     class="text-white bg-rose-500 hover:bg-rose-600 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 transition-colors {tutorialStage ===
-                        6 && 'z-50'}"
+                        7 && 'z-50'}"
                     aria-label="Export as image"
                 >
                     <div class="w-5 h-5 lg:hidden">
@@ -1045,7 +1055,7 @@
                 </button>
                 <div
                     class="items-center border border-indigo-400 rounded-md overflow-hidden text-sm hidden lg:flex bg-white dark:bg-zinc-800 {tutorialStage ===
-                        7 && 'z-50'}"
+                        8 && 'z-50'}"
                 >
                     <div class="pl-2 pr-1 dark:text-white relative">
                         <span>{window.location.origin}/?i=N4lg</span>
@@ -1065,7 +1075,7 @@
                 <button
                     on:click={copyURLToClipboard}
                     class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-md text-sm p-3 lg:px-5 lg:py-2.5 dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-colors lg:hidden {tutorialStage ===
-                        7 && 'z-50'}"
+                        8 && 'z-50'}"
                     aria-label="Copy share URL"
                 >
                     <div class="w-5 h-5 lg:hidden">
