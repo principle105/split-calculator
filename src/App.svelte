@@ -148,7 +148,7 @@
         const wasTotalTimeRawInputUpdated =
             totalTimeRawInput === formatMillisecondsAsTimestamp(totalTime);
         const wasAverageSplitRawInputUpdated =
-            averageSplitRawInput !==
+            averageSplitRawInput ===
             formatMillisecondsAsTimestamp(averageSplit);
 
         averageSplit = intervals ? calculateTotalTime() : 0;
@@ -768,6 +768,11 @@
             distance = undoState.distance;
             distanceRawInput = distance.toString();
 
+            averageSplit = intervals ? calculateTotalTime() : 0;
+            totalTime = (averageSplit / 500) * distance;
+            totalTimeRawInput = formatMillisecondsAsTimestamp(totalTime);
+            averageSplitRawInput = formatMillisecondsAsTimestamp(averageSplit);
+
             undoStates = undoStates;
             redoStates = redoStates;
         }
@@ -781,6 +786,11 @@
             intervals = redoState.intervals;
             distance = redoState.distance;
             distanceRawInput = distance.toString();
+
+            averageSplit = intervals ? calculateTotalTime() : 0;
+            totalTime = (averageSplit / 500) * distance;
+            totalTimeRawInput = formatMillisecondsAsTimestamp(totalTime);
+            averageSplitRawInput = formatMillisecondsAsTimestamp(averageSplit);
 
             undoStates = undoStates;
             redoStates = redoStates;
@@ -874,6 +884,7 @@
                     aria-label="Edit total time"
                     bind:value={totalTimeRawInput}
                     on:blur={handleTotalTimeBlur}
+                    on:input={handleTotalTimeInput}
                     on:keypress={blurOnEnter}
                     maxlength="20"
                     disabled={intervals.length === 0}
@@ -894,6 +905,7 @@
                         aria-label="Edit average split"
                         bind:value={averageSplitRawInput}
                         on:blur={handleAverageSplitBlur}
+                        on:input={handleAverageSplitInput}
                         on:keypress={blurOnEnter}
                         maxlength="6"
                         disabled={intervals.length === 0}
