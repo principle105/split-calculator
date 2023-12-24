@@ -655,7 +655,9 @@
                     interval.seconds,
                     interval.milliseconds
                 );
-                return `${interval.size},${totalMilliseconds / 10000}`;
+                return `${Math.round(interval.size * 100) / 100},${
+                    totalMilliseconds / 10000
+                }`;
             })
             .join(",");
 
