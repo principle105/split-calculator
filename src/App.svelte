@@ -134,6 +134,8 @@
     let averageSplitRawInput: string = "";
     let totalTimeRawInput: string = "";
 
+    let shareCode: string = "";
+
     $: intervals, updateIntervalsInStorage();
     $: distance, updateDistanceInStorage();
     $: isDarkMode, updateTheme();
@@ -143,6 +145,8 @@
     $: minInc = Math.pow(10, Math.floor(Math.log10(distance))) / 100;
 
     $: (intervals, distance), updateAverageSplitAndTotalTime();
+
+    $: intervals, (shareCode = createShareCode());
 
     const updateAverageSplitAndTotalTime = () => {
         const wasTotalTimeRawInputUpdated =
@@ -640,7 +644,7 @@
         intervals = [...intervals, newInterval];
     };
 
-    const createShareURL = () => {
+    const createShareCode = () => {
         const compressedIntervals = intervals
             .map((interval) => {
                 const totalMilliseconds = addTimeAndConvertToMilliseconds(
@@ -653,11 +657,9 @@
             })
             .join(",");
 
-        const shareCode = LZString.compressToEncodedURIComponent(
+        return LZString.compressToEncodedURIComponent(
             `${compressedIntervals},${distance}`
         );
-
-        return shareCode;
     };
 
     const loadShareURL = () => {
@@ -710,10 +712,9 @@
     };
 
     const copyURLToClipboard = () => {
-        const encodedIntervals = createShareURL();
-        const url = `${window.location.origin}/?i=${encodedIntervals}`;
+        const shareURl = `${window.location.origin}/?i=${shareCode}`;
 
-        navigator.clipboard.writeText(url);
+        navigator.clipboard.writeText(shareCode);
 
         toast.success("Share link copied to clipboard");
     };
@@ -1116,22 +1117,31 @@
                     <span class="lg:inline hidden">Export as Image</span>
                 </button>
                 <div
-                    class="items-center border border-indigo-400 rounded-md overflow-hidden text-sm hidden lg:flex bg-white dark:bg-zinc-800 {tutorialStage ===
+                    class="relative items-center border border-indigo-400 rounded-md overflow-hidden text-sm hidden lg:flex bg-white dark:bg-zinc-800 dark:text-white {tutorialStage ===
                         8 && 'z-50'}"
                 >
-                    <div class="pl-2 pr-1 dark:text-white relative">
-                        <span>{window.location.origin}/?i=N4lg</span>
+                    <div class="pl-2 pr-1 invisible">
+                        {window.location.origin}/?i=mmm
+                    </div>
+                    <div class="pl-2 absolute">
+                        <span class="z-10">
+                            {window.location.origin}/?i={shareCode.substring(
+                                0,
+                                5
+                            )}
+                        </span>
+                    </div>
+                    <div class="relative">
+                        <button
+                            on:click={copyURLToClipboard}
+                            class=" text-white bg-indigo-600 hover:bg-indigo-700 font-medium px-3.5 py-[0.575rem] dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-colors"
+                        >
+                            Copy Share Link
+                        </button>
                         <div
-                            class="absolute bg-white dark:bg-zinc-800 h-full w-1 bottom-0 right-1"
+                            class="absolute bg-white dark:bg-zinc-800 h-full w-1 bottom-0 left-0 z-10"
                         />
                     </div>
-
-                    <button
-                        on:click={copyURLToClipboard}
-                        class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium px-3.5 py-[0.575rem] dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-colors"
-                    >
-                        Copy Share Link
-                    </button>
                 </div>
 
                 <button
