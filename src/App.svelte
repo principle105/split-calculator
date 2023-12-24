@@ -712,9 +712,9 @@
     };
 
     const copyURLToClipboard = () => {
-        const shareURl = `${window.location.origin}/?i=${shareCode}`;
+        const shareURL = `${window.location.origin}/?i=${shareCode}`;
 
-        navigator.clipboard.writeText(shareCode);
+        navigator.clipboard.writeText(shareURL);
 
         toast.success("Share link copied to clipboard");
     };
