@@ -221,6 +221,7 @@
     const formatMillisecondsAsTimestamp = (milliseconds: number): string => {
         const [hours, minutes, seconds, remainingMilliseconds] =
             convertMilliseconds(milliseconds);
+
         const millisecondsDecimal = Math.floor(remainingMilliseconds / 100);
 
         const hoursPart = hours > 0 ? `${hours}:` : "";
@@ -569,7 +570,8 @@
                 interval.milliseconds
             );
 
-            const newIntervalTime = totalIntervalTime * scaleFactor;
+            const newIntervalTime =
+                Math.round((totalIntervalTime * scaleFactor) / 100) * 100;
 
             const [_, minutes, seconds, remainingMilliseconds] =
                 convertMilliseconds(newIntervalTime);
