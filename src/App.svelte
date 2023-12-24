@@ -134,8 +134,6 @@
     let averageSplitRawInput: string = "";
     let totalTimeRawInput: string = "";
 
-    let shareCode: string = "";
-
     $: intervals, updateIntervalsInStorage();
     $: distance, updateDistanceInStorage();
     $: isDarkMode, updateTheme();
@@ -146,7 +144,7 @@
 
     $: (intervals, distance), updateAverageSplitAndTotalTime();
 
-    $: intervals, (shareCode = createShareCode());
+    $: shareCode = createShareCode(intervals);
 
     const updateAverageSplitAndTotalTime = () => {
         const wasTotalTimeRawInputUpdated =
@@ -646,7 +644,7 @@
         intervals = [...intervals, newInterval];
     };
 
-    const createShareCode = () => {
+    const createShareCode = (intervals) => {
         const compressedIntervals = intervals
             .map((interval) => {
                 const totalMilliseconds = addTimeAndConvertToMilliseconds(
