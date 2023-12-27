@@ -3,6 +3,7 @@
     "compilerOptions": {
         "target": "ESNext",
         "useDefineForClassFields": true,
+        "ignoreDeprecations": "5.0",
         "module": "ESNext",
         "resolveJsonModule": true,
         /**
@@ -13,7 +14,12 @@
          */
         "allowJs": true,
         "checkJs": true,
-        "isolatedModules": true
+        "isolatedModules": true,
+        "baseUrl": "src",
+        "paths": {
+            "$lib/*": ["lib/*"],
+            "$components/*": ["components/*"]
+        }
     },
     "include": [
         "src/**/*.d.ts",
