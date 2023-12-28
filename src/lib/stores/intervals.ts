@@ -15,7 +15,7 @@ const getInitialValue = () => {
         }
     }
 
-    return [defaultIntervals];
+    return defaultIntervals;
 };
 
 const initialValue = getInitialValue();
