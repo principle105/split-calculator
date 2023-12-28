@@ -32,10 +32,7 @@
         };
 
         intervals.update((value) => {
-            return {
-                ...value,
-                newInterval,
-            };
+            return [...value, newInterval];
         });
     };
 </script>
