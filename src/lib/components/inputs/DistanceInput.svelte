@@ -48,7 +48,7 @@
 </script>
 
 <div
-    class="font-bold text-4xl lg:text-5xl flex items-center rounded-lg px-2 lg:py-3 py-2 dark:bg-zinc-700/80 transition-colors text-zinc-800 dark:text-white {tutorialStage ===
+    class="font-bold text-4xl lg:text-5xl flex items-center rounded-lg px-2 lg:py-3 py-2 dark:bg-zinc-700/[0.45] transition-colors text-zinc-800 dark:text-white {tutorialStage ===
     4
         ? 'z-50 bg-white'
         : 'bg-zinc-300/30 dark:focus-within:bg-zinc-700 focus-within:bg-zinc-600 focus-within:text-white'}"

@@ -125,10 +125,7 @@
         1 && 'z-50 bg-white dark:bg-transparent'}"
 >
     <p
-        class="py-[3.575rem] text-zinc-800 font-medium dark:!text-white h-full flex justify-center items-center bg-zinc-300/30 {$intervals.length ==
-        0
-            ? 'dark:!bg-zinc-700/80'
-            : 'dark:!bg-transparent'}"
+        class="py-[3.575rem] bg-zinc-300/30  text-zinc-800 font-medium dark:!bg-zinc-700 dark:!text-white h-full flex justify-center items-center"
     >
         {#if $intervals.length == 0}
             You don't have any sections
@@ -147,9 +144,9 @@
                 <Pane
                     minSize={SMALLEST_INTERVAL_SIZE}
                     size={interval.size}
-                    class="px-2 flex lg:flex-col justify-center items-center lg:items-start gap-4 lg:gap-1 dark:!bg-zinc-700/80 !bg-transparent dark:!bg-opacity-100"
+                    class="px-2 flex lg:flex-col justify-center items-center lg:items-start gap-4 lg:gap-1 dark:!bg-zinc-700 !bg-transparent dark:!bg-opacity-100"
                 >
-                    <h3 class="text-sm dark:text-white text-zinc-800">
+                    <h3 class="text-sm dark:text-white">
                         {$distance
                             ? getIntervalDistance(interval.size, $distance)
                             : 0}m
@@ -163,7 +160,7 @@
                         on:blur={() => handleSplitBlur(i)}
                         on:keypress={blurOnEnter}
                         maxlength="6"
-                        class="outline-none w-full block max-w-[3.25rem] text-center rounded-md dark:text-white text-zinc-800 my-1 py-0.5 lg:py-2 !leading-6 transition-colors {interval
+                        class="outline-none w-full block max-w-[3.25rem] text-center rounded-md dark:text-white my-1 py-0.5 lg:py-2 !leading-6 transition-colors {interval
                             .rawInput.length > 4
                             ? 'text-sm'
                             : 'text-base'} {tutorialStage === 2
